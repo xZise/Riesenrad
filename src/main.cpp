@@ -86,13 +86,15 @@ void move3() {
 
   const int start = random(NUM_LEDS);
   const bool reverse = random(2) == 0;
-  for (int iteration = 0; iteration < NUM_LEDS; iteration++) {
-    for (int i = 0; i < trail_length; i++) {
-      int led = (iteration + start + i) % NUM_LEDS;
+
+  for (uint8_t remaining_iterations = NUM_LEDS; remaining_iterations > 0; remaining_iterations--) {
+    uint8_t actualTrail = min(trail_length, remaining_iterations - 1);
+    for (int i = 0; i < actualTrail; i++) {
+      int led = (remaining_iterations + start + i) % NUM_LEDS;
       if (reverse) {
         led = NUM_LEDS - led - 1;
       }
-      if (i == trail_length - 1) {
+      if (i == 0) {
         leds[led] = CRGB::Red;
       } else {
         // leds[led] = CRGB::Wheat;
@@ -103,7 +105,6 @@ void move3() {
       }
     }
 
-    uint8_t remaining_iterations = NUM_LEDS - iteration;
     if (remaining_iterations < 4) {
       fadeToBlackBy(leds, NUM_LEDS, 255 / remaining_iterations);
     }
