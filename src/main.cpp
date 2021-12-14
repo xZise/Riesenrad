@@ -25,8 +25,12 @@ void allBlack() {
   }
 }
 
+const CRGB getRandomColor() {
+  return CRGB(availableColors[random8(availableColorsLength)]);
+}
+
 void move1() {
-  CRGB color = CRGB(availableColors[random8(availableColorsLength)]);
+  CRGB color = getRandomColor();
 
   for (int i = 0; i < NUM_LEDS; i++) {
     for (int j = 0; j < NUM_LEDS - i; j++) {
@@ -62,8 +66,8 @@ void move1() {
 }
 
 void move2() {
-  CRGB color = CRGB(availableColors[random8(availableColorsLength)]);
-  CRGB bgColor = CRGB(availableColors[random8(availableColorsLength)]);
+  CRGB color = getRandomColor();
+  CRGB bgColor = getRandomColor();
   if (color == bgColor) {
     bgColor = CRGB::Black;
   }
