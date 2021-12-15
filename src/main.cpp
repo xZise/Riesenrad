@@ -29,15 +29,33 @@ const CRGB getRandomColor() {
   return CRGB(availableColors[random8(availableColorsLength)]);
 }
 
+const uint8_t getLedIndex(int8_t index) {
+  if (index < 0) {
+    while (index < 0) {
+      index += NUM_LEDS;
+    }
+    return index;
+  } else {
+    return index % NUM_LEDS;
+  }
+}
+
+CRGB* getLed(int8_t index) {
+  uint8_t absoluteIndex = getLedIndex(index);
+  return &leds[absoluteIndex];
+}
+
 void move1() {
   CRGB color = getRandomColor();
+  uint8_t offset = random8(NUM_LEDS);
 
   for (int i = 0; i < NUM_LEDS; i++) {
     for (int j = 0; j < NUM_LEDS - i; j++) {
+      uint8_t led = (j + offset) % NUM_LEDS;
       if (j > 0) {
-        leds[j - 1] = CRGB::Black;
+        leds[(led == 0 ? NUM_LEDS : led) - 1] = CRGB::Black;
       }
-      leds[j] = color;
+      leds[led] = color;
       FastLED.show();
       delay(50);
     }
@@ -51,13 +69,11 @@ void move1() {
   } else {
     center_near = center_far - 1;
   }
-  for (int i = 0; i < NUM_LEDS / 2; i++) {
-    if (center_near >= 0) {
-      leds[center_near] = CRGB::Black;
-      center_near--;
-    }
+  while (center_near < 0xff) {
+    *getLed(center_near + offset) = CRGB::Black;
+    center_near--;
     if (center_far < NUM_LEDS) {
-      leds[center_far] = CRGB::Black;
+      *getLed(center_far + offset) = CRGB::Black;
       center_far++;
     }
     FastLED.show();
@@ -90,24 +106,22 @@ void move3() {
   for (uint8_t remaining_iterations = NUM_LEDS; remaining_iterations > 0; remaining_iterations--) {
     uint8_t actualTrail = min(trail_length, remaining_iterations - 1);
     for (int i = 0; i < actualTrail; i++) {
-      int led = (remaining_iterations + start + i) % NUM_LEDS;
+      int8_t index = remaining_iterations + start + i;
       if (reverse) {
-        led = NUM_LEDS - led - 1;
+        index = NUM_LEDS - index;
       }
+      CRGB* led = getLed(index);
       if (i == 0) {
-        leds[led] = CRGB::Red;
+        *led = CRGB::Red;
       } else {
-        // leds[led] = CRGB::Wheat;
-        CRGB color = CRGB::Wheat;
-        // color = color.fadeToBlackBy(0xff - i - 10);
-        leds[led] = color;
-        // fadeToBlackBy(&leds[led], 1, 255);
+        *led = CRGB::Wheat;
       }
     }
 
     if (remaining_iterations < 4) {
       fadeToBlackBy(leds, NUM_LEDS, 255 / remaining_iterations);
     }
+
     FastLED.show();
     delay(100);
     allBlack();
