@@ -151,28 +151,19 @@ void move4() {
   }
 }
 
+typedef void (*t_movefunc)();
+
+constexpr t_movefunc movefuncs[] = {&move1, &move2, &move3, &move4};
+constexpr uint8_t numMoveFuncs = sizeof(movefuncs) / sizeof(t_movefunc);
+
+void move(uint8_t mode) {
+  allBlack();
+  if (mode < numMoveFuncs) {
+    (*movefuncs[mode])();
+  }
+}
+
 void loop() {
   allBlack();
-  switch (random(4)) {
-    case 0:
-      move1();
-      break;
-    case 1:
-      move2();
-      break;
-    case 2:
-      move3();
-      break;
-    case 3:
-      move4();
-      break;
-  }
-  // FastLED.show();
-  // delay(1000);
-
-  // CRGB temp = leds[0];
-  // for (int i = 0; i < NUM_LEDS - 1; i++) {
-  //   leds[i] = leds[i + 1];
-  // }
-  // leds[NUM_LEDS - 1] = temp;
+  move(random8(numMoveFuncs));
 }
