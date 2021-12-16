@@ -246,6 +246,38 @@ void rotation() {
   }
 }
 
+void islandsAlternating() {
+  // Should be separated evenly?
+  constexpr uint8_t numIslands = 9;
+  constexpr uint8_t islandWidth = NUM_LEDS / numIslands;
+  CRGB color = getRandomColor();
+
+  // 6: [0 1 2 3 4 5]
+  //     6 4 2 1 3 5
+  // 5: [0 1 2 3 4]
+  //     4 2 1 3 5
+
+  uint8_t islandIndex = islandWidth / 2;
+  int8_t delta = -1;
+  for (uint8_t width = 0; width < islandWidth; width++) {
+    uint8_t offset = islandIndex;
+    while (offset < NUM_LEDS) {
+      leds[offset] = color;
+      offset += islandWidth;
+    }
+
+    islandIndex += delta;
+    if (delta < 0) {
+      delta--;
+    } else {
+      delta++;
+    }
+    delta = -delta;
+    FastLED.show();
+    delay(400);
+  }
+}
+
 typedef void (*t_movefunc)();
 
 constexpr t_movefunc movefuncs[] = {
@@ -253,6 +285,7 @@ constexpr t_movefunc movefuncs[] = {
   &move2,
   &move3,
   &move4,
+  &islandsAlternating,
   &sprinkle,
   &rotation,
   &snake,
