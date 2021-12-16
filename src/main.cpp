@@ -1,46 +1,11 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-template <typename T, size_t N>
-constexpr size_t array_size(T (&)[N]) {
-    return N;
-}
-
-constexpr uint8_t NUM_LEDS = 30;
-constexpr uint8_t DATA_PIN = 8;
-
-constexpr uint32_t availableColors[] = {CRGB::Red, CRGB::Yellow, CRGB::Green, CRGB::Ivory};
-constexpr uint8_t availableColorsLength = array_size(availableColors);
-
-CRGB leds[NUM_LEDS];
+#include "leds.hpp"
 
 void setup() {
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(30);
-}
-
-void allBlack() {
-  fill_solid(leds, NUM_LEDS, CRGB::Black);
-}
-
-const CRGB getRandomColor() {
-  return CRGB(availableColors[random8(availableColorsLength)]);
-}
-
-const uint8_t getLedIndex(int8_t index) {
-  if (index < 0) {
-    while (index < 0) {
-      index += NUM_LEDS;
-    }
-    return index;
-  } else {
-    return index % NUM_LEDS;
-  }
-}
-
-CRGB* getLed(int8_t index) {
-  uint8_t absoluteIndex = getLedIndex(index);
-  return &leds[absoluteIndex];
 }
 
 void move1() {
