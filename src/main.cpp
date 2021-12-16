@@ -129,9 +129,11 @@ void move3() {
 
 void move4() {
   constexpr uint8_t glitterSpecs = NUM_LEDS / 5;
-  allBlack();
-  for (int i = 0; i < 20; i++) {
-    uint8_t newSpecs = glitterSpecs;
+
+  int iteration = 20;
+  uint8_t newSpecs;
+  do {
+    newSpecs = glitterSpecs;
     for (int led = 0; led < NUM_LEDS; led++) {
       if (leds[led] != CRGB(0, 0, 0)) {
         if (random8() < 150) {
@@ -141,12 +143,15 @@ void move4() {
         }
       }
     }
-    while (newSpecs-- > 0) {
-      leds[random8(NUM_LEDS)] = CRGB::White;
+    if (iteration > 0) {
+      iteration--;
+      while (newSpecs-- > 0) {
+        leds[random8(NUM_LEDS)] = CRGB::White;
+      }
     }
     FastLED.show();
     delay(100);
-  }
+  } while (iteration > 0 || newSpecs < glitterSpecs);
 }
 
 typedef void (*t_movefunc)();
