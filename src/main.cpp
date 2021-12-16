@@ -2,6 +2,7 @@
 #include <FastLED.h>
 
 #include "leds.hpp"
+#include "sprinkle.hpp"
 
 void setup() {
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
@@ -121,7 +122,7 @@ void move4() {
 
 typedef void (*t_movefunc)();
 
-constexpr t_movefunc movefuncs[] = {&move1, &move2, &move3, &move4};
+constexpr t_movefunc movefuncs[] = {&move1, &move2, &move3, &move4, &sprinkle};
 constexpr uint8_t numMoveFuncs = array_size(movefuncs);
 
 void move(uint8_t mode) {
