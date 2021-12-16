@@ -20,9 +20,7 @@ void setup() {
 }
 
 void allBlack() {
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB::Black;
-  }
+  fill_solid(leds, NUM_LEDS, CRGB::Black);
 }
 
 const CRGB getRandomColor() {
