@@ -59,34 +59,35 @@ void sprinkle() {
   SprinkleState sprinkleLeds[num_sprinkles];
 
   while (remainingSprinkles > 0) {
+    uint8_t placementTests = num_sprinkles - sprinkles;
+    while (placementTests-- > 0) {
+      if (remainingSprinkles > sprinkles && random8() < 50) {
+        // Try to get a new LED for a new sprinkle
+        bool isUnique;
+        uint8_t newLed;
+        uint8_t freeIndex;
+        do {
+          isUnique = true;
+          newLed = random8(NUM_LEDS);
 
-    if (sprinkles < num_sprinkles && remainingSprinkles > sprinkles && random8() < 100) {
-      // Try to get a new LED for a new sprinkle
-      bool isUnique;
-      uint8_t newLed;
-      uint8_t freeIndex;
-      do {
-        isUnique = true;
-        newLed = random8(NUM_LEDS);
-
-        freeIndex = num_sprinkles;
-        for (uint8_t sprinkleLed = 0; sprinkleLed < num_sprinkles; sprinkleLed++) {
-          if (sprinkleLeds[sprinkleLed].isActive()) {
-            if (sprinkleLeds[sprinkleLed].getLed() == newLed) {
-              isUnique = false;
-              break;
+          freeIndex = num_sprinkles;
+          for (uint8_t sprinkleLed = 0; sprinkleLed < num_sprinkles; sprinkleLed++) {
+            if (sprinkleLeds[sprinkleLed].isActive()) {
+              if (sprinkleLeds[sprinkleLed].getLed() == newLed) {
+                isUnique = false;
+                break;
+              }
+            } else if (sprinkleLed < freeIndex) {
+              freeIndex = sprinkleLed;
             }
-          } else if (sprinkleLed < freeIndex) {
-            freeIndex = sprinkleLed;
           }
+        } while (!isUnique);
+
+        if (freeIndex < num_sprinkles) {
+          sprinkleLeds[freeIndex].init(newLed, random8(10, 50));
+          sprinkles++;
         }
-      } while (!isUnique);
-
-      if (freeIndex < num_sprinkles) {
-        sprinkleLeds[freeIndex].init(newLed, random8(10, 50));
       }
-
-      sprinkles++;
     }
 
     if (sprinkles > 0) {
