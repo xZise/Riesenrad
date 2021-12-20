@@ -10,7 +10,7 @@ public:
 
   void init(const uint8_t led, const uint8_t dimStep);
 
-  int getLed() const;
+  uint8_t getLed() const;
 
   bool isActive() const;
 

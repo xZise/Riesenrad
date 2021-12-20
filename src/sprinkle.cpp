@@ -14,7 +14,7 @@ void SprinkleState::init(const uint8_t led, const uint8_t dimStep) {
   _brighten = true;
 }
 
-int SprinkleState::getLed() const {
+uint8_t SprinkleState::getLed() const {
   return _led;
 }
 
