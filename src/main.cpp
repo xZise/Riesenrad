@@ -70,15 +70,18 @@ void move3() {
   for (uint8_t remaining_iterations = NUM_LEDS; remaining_iterations > 0; remaining_iterations--) {
     uint8_t actualTrail = min(trail_length, remaining_iterations - 1);
     for (uint8_t i = 0; i < actualTrail; i++) {
-      int8_t index = remaining_iterations + start + i;
+      uint8_t index = getLedOffsetIndex(remaining_iterations, start);
+      index = getLedOffsetIndex(index, i);
       if (reverse) {
-        index = NUM_LEDS - index;
+        if (index >= NUM_LEDS) {
+          index -= NUM_LEDS;
+        }
+        index = NUM_LEDS - index - 1;
       }
-      CRGB* led = getLed(index);
       if (i == 0) {
-        *led = CRGB::Red;
+        leds[index] = CRGB::Red;
       } else {
-        *led = CRGB::Wheat;
+        leds[index] = CRGB::Wheat;
       }
     }
 
