@@ -38,10 +38,10 @@ void move1() {
     center_near = center_far - 1;
   }
   while (center_near < 0xff) {
-    *getLed(center_near + offset) = CRGB::Black;
+    *getLedOffset(center_near, offset) = CRGB::Black;
     center_near--;
     if (center_far < NUM_LEDS) {
-      *getLed(center_far + offset) = CRGB::Black;
+      *getLedOffset(center_far, offset) = CRGB::Black;
       center_far++;
     }
     FastLED.show();

@@ -42,3 +42,8 @@ CRGB* getLed(int8_t index) {
   uint8_t absoluteIndex = getLedIndex(index);
   return &leds[absoluteIndex];
 }
+
+CRGB* getLedOffset(const uint8_t index, const uint8_t offset) {
+  uint8_t absoluteIndex = getLedOffsetIndex(index, offset);
+  return &leds[absoluteIndex];
+}

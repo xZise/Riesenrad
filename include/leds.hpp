@@ -24,3 +24,4 @@ const uint8_t getLedIndex(int8_t index);
 const uint8_t getLedOffsetIndex(const uint8_t index, const uint8_t offset);
 
 CRGB* getLed(int8_t index);
+CRGB* getLedOffset(const uint8_t index, const uint8_t offset);
