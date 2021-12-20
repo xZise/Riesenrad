@@ -4,6 +4,10 @@
 #include "leds.hpp"
 #include "sprinkle.hpp"
 
+bool randomBool() {
+  return (random8() >> 7) == 0;
+}
+
 void setup() {
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(30);
@@ -65,7 +69,7 @@ void move3() {
   constexpr uint8_t trail_length = NUM_LEDS / 10 + 1;
 
   const uint8_t start = random8(NUM_LEDS);
-  const bool reverse = random(2) == 0;
+  const bool reverse = randomBool();
 
   for (uint8_t remaining_iterations = NUM_LEDS; remaining_iterations > 0; remaining_iterations--) {
     uint8_t actualTrail = min(trail_length, remaining_iterations - 1);
@@ -123,6 +127,44 @@ void move4() {
   } while (iteration > 0 || newSpecs < glitterSpecs);
 }
 
+void rotation() {
+  constexpr uint8_t numColors = availableColorsLength;
+  constexpr uint8_t colorWidth = NUM_LEDS / numColors;
+
+  const bool isSolid = randomBool();
+  const uint8_t colorOffset = random8(numColors);
+
+  uint8_t offset = 0;
+
+  for (int8_t section = numColors - 1; section >= 0; section--) {
+    uint8_t len = colorWidth;
+    if (section == 0) {
+      len = NUM_LEDS - offset;
+    }
+    CRGB color = availableColors[(colorOffset + section) % availableColorsLength];
+    if (isSolid) {
+      fill_solid(&leds[offset], len, color);
+    } else {
+      CRGB sndColor = availableColors[(colorOffset + section + 1) % availableColorsLength];
+      fill_gradient_RGB(&leds[offset], len, sndColor, color);
+    }
+    offset += colorWidth;
+  }
+
+  bool fadeOut = false;
+  for (uint8_t step = 0; step < NUM_LEDS; step++) {
+    FastLED.show();
+    CRGB temp = fadeOut ? CRGB::Black : leds[0];
+    memmove(leds, &leds[1], sizeof(CRGB) * (NUM_LEDS - 1));
+    leds[NUM_LEDS - 1] = temp;
+    delay(50);
+    if (step == NUM_LEDS - 1 && !fadeOut) {
+      step = 0;
+      fadeOut = true;
+    }
+  }
+}
+
 typedef void (*t_movefunc)();
 
 constexpr t_movefunc movefuncs[] = {
@@ -131,6 +173,7 @@ constexpr t_movefunc movefuncs[] = {
   &move3,
   &move4,
   &sprinkle,
+  &rotation,
 };
 constexpr uint8_t numMoveFuncs = array_size(movefuncs);
 
