@@ -62,7 +62,7 @@ void move2() {
 }
 
 void move3() {
-  constexpr uint8_t trail_length = 4;
+  constexpr uint8_t trail_length = NUM_LEDS / 10 + 1;
 
   const int start = random(NUM_LEDS);
   const bool reverse = random(2) == 0;
