@@ -125,7 +125,13 @@ void move4() {
 
 typedef void (*t_movefunc)();
 
-constexpr t_movefunc movefuncs[] = {&move1, &move2, &move3, &move4, &sprinkle};
+constexpr t_movefunc movefuncs[] = {
+  &move1,
+  &move2,
+  &move3,
+  &move4,
+  &sprinkle,
+};
 constexpr uint8_t numMoveFuncs = array_size(movefuncs);
 
 void move(uint8_t mode) {
