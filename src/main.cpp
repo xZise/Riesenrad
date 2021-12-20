@@ -13,17 +13,33 @@ void setup() {
   FastLED.setBrightness(30);
 }
 
-void move1() {
-  CRGB color = getRandomColor();
+void fallingStacks() {
+  constexpr uint8_t stackDivisor = 30;
+  constexpr uint8_t stackLength = NUM_LEDS >= stackDivisor ? NUM_LEDS / stackDivisor : 1;
+  constexpr uint8_t stackCount = stackLength < 4 ? 4 - stackLength : 1;
+  // TODO: In theory this should be a clean divisor of NUM_LEDs, this is not guaranteed yet.
+  constexpr uint8_t stackLedCount = stackLength * stackCount;
+  CRGB colors[stackLedCount];
+  for (uint8_t i = 0; i < stackLedCount; i++) {
+    colors[i] = getRandomColor();
+  }
+
   uint8_t offset = random8(NUM_LEDS);
 
-  for (uint8_t i = 0; i < NUM_LEDS; i++) {
-    for (uint8_t j = 0; j < NUM_LEDS - i; j++) {
-      uint8_t led = (j + offset) % NUM_LEDS;
-      if (j > 0) {
-        leds[(led == 0 ? NUM_LEDS : led) - 1] = CRGB::Black;
+  for (uint8_t i = 0; i < NUM_LEDS; i += stackLength) {
+    for (uint8_t j = 0; j < NUM_LEDS - i; j += stackLength) {
+      for (uint8_t k = 0; k < stackLength; k++) {
+        uint8_t led = (j + offset + k) % NUM_LEDS;
+        if (j > 0) {
+          uint8_t oldLed = led;
+          if (led < stackLength) {
+            oldLed += NUM_LEDS;
+          }
+          oldLed -= stackLength;
+          leds[oldLed] = CRGB::Black;
+        }
+        leds[led] = colors[(i + k) % stackLedCount];
       }
-      leds[led] = color;
       FastLED.show();
       delay(50);
     }
@@ -168,7 +184,7 @@ void rotation() {
 typedef void (*t_movefunc)();
 
 constexpr t_movefunc movefuncs[] = {
-  &move1,
+  &fallingStacks,
   &move2,
   &move3,
   &move4,
