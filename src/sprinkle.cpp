@@ -2,24 +2,24 @@
 #include "FastLED.h"
 #include "leds.hpp"
 
-void SprinkleState::setUp() {
-  dimFactor = 0xff;
-  brighten = false;
+SprinkleState::SprinkleState() {
+  _dimFactor = 0xff;
+  _brighten = false;
 }
 
 void SprinkleState::init(const uint8_t led, const uint8_t dimStep) {
-  this->led = led;
-  this->dimStep = dimStep;
-  dimFactor = 0xff;
-  brighten = true;
+  _led = led;
+  _dimStep = dimStep;
+  _dimFactor = 0xff;
+  _brighten = true;
 }
 
 int SprinkleState::getLed() const {
-  return led;
+  return _led;
 }
 
 bool SprinkleState::isActive() const {
-  return brighten || dimFactor < 0xff;
+  return _brighten || _dimFactor < 0xff;
 }
 
 bool SprinkleState::step() {
@@ -28,24 +28,24 @@ bool SprinkleState::step() {
   }
 
   bool hasStopped = false;
-  if (brighten) {
-    if (dimFactor > dimStep) {
-      dimFactor -= dimStep;
+  if (_brighten) {
+    if (_dimFactor > _dimStep) {
+      _dimFactor -= _dimStep;
     } else {
-      dimFactor = 0;
-      brighten = false;
+      _dimFactor = 0;
+      _brighten = false;
     }
   } else {
-    if (dimFactor < 0xff - dimStep) {
-      dimFactor += dimStep;
+    if (_dimFactor < 0xff - _dimStep) {
+      _dimFactor += _dimStep;
     } else {
-      dimFactor = 0xff;
+      _dimFactor = 0xff;
       hasStopped = true;
     }
   }
   CRGB color = CRGB::White;
-  color.fadeToBlackBy(dimFactor);
-  leds[led] = color;
+  color.fadeToBlackBy(_dimFactor);
+  leds[_led] = color;
 
   return hasStopped;
 }
@@ -57,10 +57,6 @@ void sprinkle() {
   uint8_t sprinkles = 0;
   uint8_t remainingSprinkles = NUM_LEDS * 2;
   SprinkleState sprinkleLeds[num_sprinkles];
-
-  for (uint8_t i = 0; i < num_sprinkles; i++) {
-    sprinkleLeds[i].setUp();
-  }
 
   while (remainingSprinkles > 0) {
 
