@@ -3,6 +3,7 @@
 
 #include "leds.hpp"
 #include "sprinkle.hpp"
+#include "bitset.cpp"
 
 bool randomBool() {
   return (random8() >> 7) == 0;
@@ -81,6 +82,76 @@ void move2() {
   }
 }
 
+void snake() {
+  constexpr uint8_t startLength = 3;
+  constexpr uint8_t maxApples = 4;
+  constexpr uint8_t maxLength = NUM_LEDS / 4 * 3;
+  const CRGB head = CRGB::DarkGreen;
+  const CRGB oddBody = CRGB::Green;
+  const CRGB evenBody = CRGB::Turquoise;
+
+  Bitset<NUM_LEDS> apples;
+  bool reverse = true;
+
+  uint8_t length = startLength;
+  uint8_t position = random8(NUM_LEDS);
+  while (length < maxLength) {
+    uint8_t missingApples = maxApples - apples.count();
+    if (missingApples > maxLength - length) {
+      missingApples = maxLength - length;
+    }
+    while (missingApples-- > 0) {
+      uint8_t newApple = random8(NUM_LEDS);
+      if (newApple >= position && newApple <= position + length) {
+        newApple += length;
+      }
+      while (apples[newApple]) {
+        newApple = (newApple + 1) % NUM_LEDS;
+      }
+      apples.set(newApple);
+    }
+
+    // draw current state
+    for (uint8_t led = 0; led < NUM_LEDS; led++) {
+      CRGB color;
+      if (led == position) {
+        color = head;
+      } else {
+        uint8_t index = led - position;
+        // if led < position -> led (or index) "would be" the number of leds higher
+        if (led < position) {
+          index += NUM_LEDS;
+        }
+        if (index <= length) {
+          color = (index >> 1) % 2 == 0 ? evenBody : oddBody;
+        } else if (apples[led]) {
+          color = CRGB::Red;
+        } else {
+          color = CRGB::Black;
+        }
+      }
+      const uint8_t actualIndex = reverse ? NUM_LEDS - led - 1 : led;
+      leds[actualIndex] = color;
+    }
+    FastLED.show();
+    if (apples.reset(position)) {
+      length++;
+    }
+    if (position > 0) {
+      position -= 1;
+    } else {
+      position = NUM_LEDS - 1;
+    }
+    delay(50);
+  }
+
+  while (length-- > 0) {
+    *getLedOffset(position, length + 1, reverse) = CRGB::Black;
+    delay(50);
+    FastLED.show();
+  }
+}
+
 void move3() {
   constexpr uint8_t trail_length = NUM_LEDS / 10 + 1;
 
@@ -91,13 +162,7 @@ void move3() {
     uint8_t actualTrail = min(trail_length, remaining_iterations - 1);
     for (uint8_t i = 0; i < actualTrail; i++) {
       uint8_t index = getLedOffsetIndex(remaining_iterations, start);
-      index = getLedOffsetIndex(index, i);
-      if (reverse) {
-        if (index >= NUM_LEDS) {
-          index -= NUM_LEDS;
-        }
-        index = NUM_LEDS - index - 1;
-      }
+      index = getLedOffsetIndex(index, i, reverse);
       if (i == 0) {
         leds[index] = CRGB::Red;
       } else {
@@ -190,6 +255,7 @@ constexpr t_movefunc movefuncs[] = {
   &move4,
   &sprinkle,
   &rotation,
+  &snake,
 };
 constexpr uint8_t numMoveFuncs = array_size(movefuncs);
 

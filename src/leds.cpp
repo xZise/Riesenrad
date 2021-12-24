@@ -21,7 +21,7 @@ const uint8_t getLedIndex(int8_t index) {
   }
 }
 
-const uint8_t getLedOffsetIndex(const uint8_t index, const uint8_t offset) {
+const uint8_t getLedOffsetIndex(const uint8_t index, const uint8_t offset, const bool reverse) {
   uint8_t newIndex = index + offset;
   // When this overflowed, the new value will always be lower than either of them
   if (newIndex < index) {
@@ -35,6 +35,9 @@ const uint8_t getLedOffsetIndex(const uint8_t index, const uint8_t offset) {
   while (newIndex >= NUM_LEDS) {
     newIndex -= NUM_LEDS;
   }
+  if (reverse) {
+    newIndex = NUM_LEDS - newIndex - 1;
+  }
   return newIndex;
 }
 
@@ -43,7 +46,7 @@ CRGB* getLed(int8_t index) {
   return &leds[absoluteIndex];
 }
 
-CRGB* getLedOffset(const uint8_t index, const uint8_t offset) {
-  uint8_t absoluteIndex = getLedOffsetIndex(index, offset);
+CRGB* getLedOffset(const uint8_t index, const uint8_t offset, const bool reverse) {
+  uint8_t absoluteIndex = getLedOffsetIndex(index, offset, reverse);
   return &leds[absoluteIndex];
 }
