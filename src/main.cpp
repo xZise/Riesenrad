@@ -217,6 +217,7 @@ void move4() {
 void rotation() {
   constexpr uint8_t numColors = availableColorsLength;
   constexpr uint8_t colorWidth = NUM_LEDS / numColors;
+  constexpr uint8_t rotationCount = 5;
 
   const bool isSolid = randomBool();
   const uint8_t colorOffset = random8(numColors);
@@ -238,16 +239,14 @@ void rotation() {
     offset += colorWidth;
   }
 
-  bool fadeOut = false;
-  for (uint8_t step = 0; step < NUM_LEDS; step++) {
-    FastLED.show();
-    CRGB temp = fadeOut ? CRGB::Black : leds[0];
-    memmove(leds, &leds[1], sizeof(CRGB) * (NUM_LEDS - 1));
-    leds[NUM_LEDS - 1] = temp;
-    delay(50);
-    if (step == NUM_LEDS - 1 && !fadeOut) {
-      step = 0;
-      fadeOut = true;
+  uint8_t rotation = rotationCount;
+  while (rotation-- > 0) {
+    for (uint8_t step = 0; step < NUM_LEDS; step++) {
+      FastLED.show();
+      CRGB temp = rotation == 0 ? CRGB::Black : leds[0];
+      memmove(leds, &leds[1], sizeof(CRGB) * (NUM_LEDS - 1));
+      leds[NUM_LEDS - 1] = temp;
+      delay(50);
     }
   }
 }
