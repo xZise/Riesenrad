@@ -94,23 +94,26 @@ void snake() {
   const CRGB evenBody = CRGB::Turquoise;
 
   Bitset<NUM_LEDS> apples;
-  bool reverse = true;
+  bool reverse = randomBool();
 
   uint8_t length = startLength;
   uint8_t position = random8(NUM_LEDS);
   while (length < maxLength) {
     uint8_t missingApples = maxApples - apples.count();
-    if (missingApples > maxLength - length) {
-      missingApples = maxLength - length;
+    if (missingApples > 0) {
+      uint8_t currentlyPossibleLength = maxLength - apples.count();
+      if (currentlyPossibleLength < missingApples) {
+        missingApples = currentlyPossibleLength;
+      }
     }
     while (missingApples-- > 0) {
-      uint8_t newApple = random8(NUM_LEDS);
-      if (newApple >= position && newApple <= position + length) {
-        newApple += length;
-      }
-      while (apples[newApple]) {
-        newApple = (newApple + 1) % NUM_LEDS;
-      }
+      uint8_t newApple;
+      do {
+        newApple = random8(NUM_LEDS);
+        if (newApple >= position && newApple <= position + length) {
+          continue;
+        }
+      } while(apples[newApple]);
       apples.set(newApple);
     }
 
