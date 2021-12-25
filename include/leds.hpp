@@ -11,6 +11,8 @@ constexpr size_t array_size(T (&)[N]) {
 constexpr uint8_t NUM_LEDS = 30;
 constexpr uint8_t DATA_PIN = 8;
 
+constexpr uint8_t LED_PIN = 7;
+
 constexpr uint32_t availableColors[] = {CRGB::Red, CRGB::Yellow, CRGB::Green, CRGB::Ivory};
 constexpr uint8_t availableColorsLength = array_size(availableColors);
 
