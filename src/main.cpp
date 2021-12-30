@@ -5,9 +5,14 @@
 #include "sprinkle.hpp"
 #include "bitset.cpp"
 
+#include "animation.hpp"
+#include "alternating.hpp"
+
 bool randomBool() {
   return (random8() >> 7) == 0;
 }
+
+volatile uint8_t frame = 0;
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
@@ -15,6 +20,55 @@ void setup() {
 
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(30);
+
+  // Arduino micro: Timer 3
+  OCR3A = 156;
+  TCCR3B = (1 << WGM32) | (1 << CS30) | (1 << CS32);
+  TIMSK3 = (1 << OCIE3A);
+
+  sei();
+
+  // TCCR0A = (1<<WGM01);    //Set the CTC mode
+  // OCR0A = 156; //Value for ORC0A for 10ms
+
+  // TIMSK0 |= (1<<OCIE0A);   //Set the interrupt request
+  // sei(); //Enable interrupt
+
+  // TCCR0B |= (1<<CS02);    //Set the prescale 1/1024 clock
+  // TCCR0B |= (1<<CS00);
+
+  AlternatingBlink blink;
+  GlitterBlink glitterBlink;
+
+  Animation *animations[] = {
+    &blink,
+    &glitterBlink,
+  };
+
+  Animation* animation = nullptr;
+  while (true) {
+    cli();
+    bool update = frame > 0;
+    if (update) {
+      frame--;
+    }
+    sei();
+    if (animation == nullptr) {
+      animation = animations[random8(array_size(animations))];
+      allBlack();
+    }
+    if (update) {
+      animation->frame();
+      if (animation->finished()) {
+        animation->reset();
+        animation = nullptr;
+      }
+    }
+  }
+}
+
+ISR(TIMER3_COMPA_vect) {
+  frame++;
 }
 
 void fallingStacks() {
@@ -66,22 +120,6 @@ void fallingStacks() {
     }
     FastLED.show();
     delay(100);
-  }
-}
-
-void move2() {
-  CRGB color = getRandomColor();
-  CRGB bgColor = getRandomColor();
-  if (color == bgColor) {
-    bgColor = CRGB::Black;
-  }
-  for (uint8_t iteration = 0; iteration < 10; iteration++) {
-    for (uint8_t led = 0; led < NUM_LEDS; led++) {
-      CRGB ledColor = ((led % 2) == (iteration % 2)) ? bgColor : color;
-      leds[led] = ledColor;
-    }
-    FastLED.show();
-    delay(500);
   }
 }
 
@@ -185,33 +223,6 @@ void move3() {
     allBlack();
   }
   delay(100);
-}
-
-void move4() {
-  constexpr uint8_t glitterSpecs = NUM_LEDS / 5;
-
-  uint8_t iteration = 20;
-  uint8_t newSpecs;
-  do {
-    newSpecs = glitterSpecs;
-    for (uint8_t led = 0; led < NUM_LEDS; led++) {
-      if (leds[led] != CRGB(0, 0, 0)) {
-        if (random8() < 150) {
-          leds[led] = CRGB::Black;
-        } else {
-          newSpecs--;
-        }
-      }
-    }
-    if (iteration > 0) {
-      iteration--;
-      while (newSpecs-- > 0) {
-        leds[random8(NUM_LEDS)] = CRGB::White;
-      }
-    }
-    FastLED.show();
-    delay(100);
-  } while (iteration > 0 || newSpecs < glitterSpecs);
 }
 
 template<size_t numColors>
@@ -320,9 +331,7 @@ typedef void (*t_movefunc)();
 
 constexpr t_movefunc movefuncs[] = {
   &fallingStacks,
-  &move2,
   &move3,
-  &move4,
   &islandsAlternating,
   &sprinkle,
   &rotation,
