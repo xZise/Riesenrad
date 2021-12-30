@@ -101,9 +101,9 @@ void snake() {
   while (length < maxLength) {
     uint8_t missingApples = maxApples - apples.count();
     if (missingApples > 0) {
-      uint8_t currentlyPossibleLength = maxLength - apples.count();
-      if (currentlyPossibleLength < missingApples) {
-        missingApples = currentlyPossibleLength;
+      uint8_t remainingLengthUnfed = maxLength - length - apples.count();
+      if (remainingLengthUnfed < missingApples) {
+        missingApples = remainingLengthUnfed;
       }
     }
     while (missingApples-- > 0) {
