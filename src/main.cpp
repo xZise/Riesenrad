@@ -214,26 +214,29 @@ void move4() {
   } while (iteration > 0 || newSpecs < glitterSpecs);
 }
 
-void rotation() {
-  constexpr uint8_t numColors = availableColorsLength;
-  constexpr uint8_t colorWidth = NUM_LEDS / numColors;
+template<size_t numColors>
+void rotation(const uint32_t (&sectionColors)[numColors],
+              const uint8_t sectionMultiply,
+              const bool isSolid) {
   constexpr uint8_t rotationCount = 5;
 
-  const bool isSolid = randomBool();
+  const uint8_t numSections = sectionMultiply * numColors;
+  const uint8_t colorWidth = NUM_LEDS / numSections;
+
   const uint8_t colorOffset = random8(numColors);
 
   uint8_t offset = 0;
 
-  for (int8_t section = numColors - 1; section >= 0; section--) {
+  for (int8_t section = numSections - 1; section >= 0; section--) {
     uint8_t len = colorWidth;
     if (section == 0) {
       len = NUM_LEDS - offset;
     }
-    CRGB color = availableColors[(colorOffset + section) % availableColorsLength];
+    CRGB color = sectionColors[(colorOffset + section) % numColors];
     if (isSolid) {
       fill_solid(&leds[offset], len, color);
     } else {
-      CRGB sndColor = availableColors[(colorOffset + section + 1) % availableColorsLength];
+      CRGB sndColor = sectionColors[(colorOffset + section + 1) % numColors];
       fill_gradient_RGB(&leds[offset], len, sndColor, color);
     }
     offset += colorWidth;
@@ -249,6 +252,36 @@ void rotation() {
       delay(50);
     }
   }
+}
+
+void rotation(const uint8_t mode, const uint8_t sectionMultiply, const bool isSolid) {
+  switch (mode)
+  {
+  case 0:
+    {
+      const uint32_t c[] = {CRGB::White, CRGB::Black};
+      rotation(c, sectionMultiply, isSolid);
+    }
+    break;
+  case 1:
+    {
+      const uint32_t c[] = {CRGB::SkyBlue, CRGB::RoyalBlue, CRGB::Blue};
+      rotation(c, sectionMultiply, isSolid);
+    }
+    break;
+  default:
+    {
+      rotation(availableColors, sectionMultiply, isSolid);
+    }
+    break;
+  }
+}
+
+void rotation() {
+  const uint8_t mode = random8(3);
+  const uint8_t sectionMultiply = random(3) + 1;
+  const bool isSolid = randomBool();
+  rotation(mode, sectionMultiply, isSolid);
 }
 
 void islandsAlternating() {
