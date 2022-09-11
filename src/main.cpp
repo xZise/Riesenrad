@@ -14,6 +14,24 @@ bool randomBool() {
 
 volatile uint8_t frame = 0;
 
+void animationLoop(Animation& animation) {
+  allBlack();
+  while (true) {
+    cli();
+    bool update = frame > 0;
+    if (update) {
+      frame--;
+    }
+    sei();
+    if (update) {
+      animation.frame();
+      if (animation.finished()) {
+        return;
+      }
+    }
+  }
+}
+
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
@@ -37,32 +55,19 @@ void setup() {
   // TCCR0B |= (1<<CS02);    //Set the prescale 1/1024 clock
   // TCCR0B |= (1<<CS00);
 
-  AlternatingBlink blink;
-  GlitterBlink glitterBlink;
-
-  Animation *animations[] = {
-    &blink,
-    &glitterBlink,
-  };
-
-  Animation* animation = nullptr;
   while (true) {
-    cli();
-    bool update = frame > 0;
-    if (update) {
-      frame--;
-    }
-    sei();
-    if (animation == nullptr) {
-      animation = animations[random8(array_size(animations))];
-      allBlack();
-    }
-    if (update) {
-      animation->frame();
-      if (animation->finished()) {
-        animation->reset();
-        animation = nullptr;
+    switch (random8(2))
+    {
+    case 1: {
+        AlternatingBlink animation;
+        animationLoop(animation);
       }
+      break;
+    case 2: {
+        GlitterBlink animation;
+        animationLoop(animation);
+      }
+      break;
     }
   }
 }
