@@ -3,7 +3,7 @@
 
 #include "leds.hpp"
 #include "sprinkle.hpp"
-#include "bitset.cpp"
+#include "bitset.hpp"
 
 #include "animation.hpp"
 #include "alternating.hpp"
