@@ -3,6 +3,14 @@
 #include "leds.hpp"
 
 class Animation {
+public:
+  void frame() {
+    if (calculateFrame()) {
+      FastLED.show();
+    }
+  }
+  virtual bool finished() = 0;
+  virtual void reset() = 0;
 protected:
   static constexpr uint8_t frameMs = 10;
 
@@ -13,18 +21,19 @@ protected:
   }
 
   virtual bool calculateFrame() = 0;
-public:
-  void frame() {
-    if (calculateFrame()) {
-      FastLED.show();
-    }
-  }
-  virtual bool finished() = 0;
-  virtual void reset() = 0;
 };
 
 template<uint8_t iterationCount, uint16_t frameDelay>
 class IterationAnimation: public Animation {
+public:
+  virtual bool finished() override {
+    return _iteration >= iterationCount;
+  }
+
+  virtual void reset() override {
+    _iteration = 0;
+    _frame = 0;
+  }
 protected:
   uint8_t _frame = 0;
   uint8_t _iteration = 0;
@@ -46,21 +55,16 @@ protected:
   }
 
   virtual void step() = 0;
-public:
-  virtual bool finished() override {
-    return _iteration >= iterationCount;
-  }
-
-  virtual void reset() override {
-    _iteration = 0;
-    _frame = 0;
-  }
 };
 
 class GlitterBlink: public IterationAnimation<20, 50> {
 public:
   static constexpr uint8_t frameDelay = 100;
   static constexpr uint8_t iterationCount = 20;
+
+  virtual bool finished() override {
+    return (_iteration >= iterationCount) && (_newSpecs = glitterSpecs);
+  }
 protected:
   virtual void step() override {
     _newSpecs = glitterSpecs;
@@ -83,8 +87,4 @@ private:
   static constexpr uint8_t glitterSpecs = NUM_LEDS / 5;
 
   uint8_t _newSpecs = glitterSpecs;
-
-  virtual bool finished() override {
-    return (_iteration >= iterationCount) && (_newSpecs = glitterSpecs);
-  }
 };

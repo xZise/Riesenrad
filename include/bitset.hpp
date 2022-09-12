@@ -2,26 +2,6 @@
 
 template<uint8_t N>
 class Bitset {
-private:
-  static constexpr uint8_t bitsPerData = sizeof(uint8_t) * 8;
-
-  static constexpr uint8_t sizeForBits(uint8_t bits) {
-    return bits / Bitset::bitsPerData + (bits % Bitset::bitsPerData > 0 ? 1 : 0); 
-  }
-
-  void addressHelper(uint8_t bit, uint8_t& mask, uint8_t& byte) const {
-    byte = bit / Bitset::bitsPerData;
-    bit %= Bitset::bitsPerData;
-    mask = 1 << bit;
-  }
-
-  uint8_t& addressHelper(uint8_t bit, uint8_t& mask) {
-    uint8_t byte;
-    addressHelper(bit, mask, byte);
-    return data[byte];
-  }
-
-  uint8_t data[Bitset::sizeForBits(N)] = {0};
 public:
   constexpr uint8_t size() {
     return N;
@@ -67,4 +47,24 @@ public:
     }
     return value;
   }
+private:
+  static constexpr uint8_t bitsPerData = sizeof(uint8_t) * 8;
+
+  static constexpr uint8_t sizeForBits(uint8_t bits) {
+    return bits / Bitset::bitsPerData + (bits % Bitset::bitsPerData > 0 ? 1 : 0); 
+  }
+
+  void addressHelper(uint8_t bit, uint8_t& mask, uint8_t& byte) const {
+    byte = bit / Bitset::bitsPerData;
+    bit %= Bitset::bitsPerData;
+    mask = 1 << bit;
+  }
+
+  uint8_t& addressHelper(uint8_t bit, uint8_t& mask) {
+    uint8_t byte;
+    addressHelper(bit, mask, byte);
+    return data[byte];
+  }
+
+  uint8_t data[Bitset::sizeForBits(N)] = {0};
 };
