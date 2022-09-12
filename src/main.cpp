@@ -69,12 +69,12 @@ void setup() {
   while (true) {
     switch (random8(2))
     {
-    case 1: {
+    case 0: {
         AlternatingBlink animation;
         animationLoop(animation);
       }
       break;
-    case 2: {
+    case 1: {
         GlitterBlink animation;
         animationLoop(animation);
       }
