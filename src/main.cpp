@@ -32,6 +32,29 @@ void animationLoop(Animation& animation) {
   }
 }
 
+void setupTimer() {
+  #ifdef ARDUINO_AVR_MICRO
+  // Arduino micro: Timer 3
+  OCR3A = 156;
+  TCCR3B = (1 << WGM32) | (1 << CS30) | (1 << CS32);
+  TIMSK3 = (1 << OCIE3A);
+
+  #define TIMER_VEC TIMER3_COMPA_vect
+  #elif ARDUINO_AVR_UNO
+  TCCR0A = (1<<WGM01);    //Set the CTC mode
+  OCR0A = 156; //Value for ORC0A for 10ms
+
+  TIMSK0 |= (1<<OCIE0A);   //Set the interrupt request
+
+  TCCR0B |= (1<<CS02);    //Set the prescale 1/1024 clock
+  TCCR0B |= (1<<CS00);
+
+  #define TIMER_VEC TIMER0_COMPA_vect
+  #else
+  #error "Timer could not be set up for board"
+  #endif
+}
+
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
@@ -39,21 +62,9 @@ void setup() {
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(30);
 
-  // Arduino micro: Timer 3
-  OCR3A = 156;
-  TCCR3B = (1 << WGM32) | (1 << CS30) | (1 << CS32);
-  TIMSK3 = (1 << OCIE3A);
+  setupTimer();
 
   sei();
-
-  // TCCR0A = (1<<WGM01);    //Set the CTC mode
-  // OCR0A = 156; //Value for ORC0A for 10ms
-
-  // TIMSK0 |= (1<<OCIE0A);   //Set the interrupt request
-  // sei(); //Enable interrupt
-
-  // TCCR0B |= (1<<CS02);    //Set the prescale 1/1024 clock
-  // TCCR0B |= (1<<CS00);
 
   while (true) {
     switch (random8(2))
@@ -72,7 +83,7 @@ void setup() {
   }
 }
 
-ISR(TIMER3_COMPA_vect) {
+ISR(TIMER_VEC) {
   frame++;
 }
 
