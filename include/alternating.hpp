@@ -9,15 +9,6 @@ public:
 
   AlternatingBlink() : AlternatingBlink(getRandomColor(), getRandomColor()) {
   }
-
-  void reset() override {
-    IterationAnimation<10, 500>::reset();
-    _firstColor = getRandomColor();
-    _secondColor = getRandomColor();
-    if (_secondColor == _firstColor) {
-      _secondColor = CRGB::Black;
-    }
-  }
 protected:
   virtual void step() override {
     for (uint8_t led = 0; led < NUM_LEDS; led++) {

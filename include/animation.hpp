@@ -10,7 +10,6 @@ public:
     }
   }
   virtual bool finished() = 0;
-  virtual void reset() = 0;
 protected:
   static constexpr uint8_t frameMs = 10;
 
@@ -28,11 +27,6 @@ class IterationAnimation: public Animation {
 public:
   virtual bool finished() override {
     return _iteration >= iterationCount;
-  }
-
-  virtual void reset() override {
-    _iteration = 0;
-    _frame = 0;
   }
 protected:
   uint8_t _frame = 0;
