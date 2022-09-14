@@ -15,6 +15,7 @@ protected:
       const CRGB ledColor = ((led % 2) == (_iteration % 2)) ? _secondColor : _firstColor;
       leds[led] = ledColor;
     }
+    IterationAnimation::step();
   }
 private:
   static constexpr uint8_t iterationCount = 10;

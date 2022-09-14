@@ -22,15 +22,10 @@ protected:
   virtual bool calculateFrame() = 0;
 };
 
-template<uint8_t iterationCount, uint16_t frameDelay>
-class IterationAnimation: public Animation {
-public:
-  virtual bool finished() override {
-    return _iteration >= iterationCount;
-  }
+template<uint16_t frameDelay>
+class FrameAnimation: public Animation {
 protected:
   uint8_t _frame = 0;
-  uint8_t _iteration = 0;
 
   virtual bool calculateFrame() override {
     if (_frame < framesPerMs<frameDelay>()) {
@@ -43,12 +38,25 @@ protected:
       }
     } else {
       _frame = 0;
-      _iteration += 1;
       return false;
     }
   }
 
   virtual void step() = 0;
+};
+
+template<uint8_t iterationCount, uint16_t frameDelay>
+class IterationAnimation: public FrameAnimation<frameDelay> {
+public:
+  virtual bool finished() override {
+    return _iteration >= iterationCount;
+  }
+protected:
+  uint8_t _iteration = 0;
+
+  virtual void step() override {
+    _iteration += 1;
+  }
 };
 
 class GlitterBlink: public IterationAnimation<20, 50> {
@@ -76,6 +84,7 @@ protected:
         leds[random8(NUM_LEDS)] = CRGB::White;
       }
     }
+    IterationAnimation::step();
   }
 private:
   static constexpr uint8_t glitterSpecs = NUM_LEDS / 5;

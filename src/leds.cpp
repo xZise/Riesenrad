@@ -2,6 +2,10 @@
 
 CRGB leds[NUM_LEDS];
 
+bool randomBool() {
+  return (random8() >> 7) == 0;
+}
+
 void allBlack() {
   fill_solid(leds, NUM_LEDS, CRGB::Black);
 }
