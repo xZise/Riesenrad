@@ -11,13 +11,16 @@
 #include "island.hpp"
 #include "move.hpp"
 #include "stacks.hpp"
+#include "rotation.hpp"
 
 #include "animationbuffer.hpp"
 
 volatile uint8_t frame = 0;
 
 void animationLoop(Animation& animation) {
-  allBlack();
+  if (animation.clearOnStart()) {
+    allBlack();
+  }
   while (true) {
     cli();
     bool update = frame > 0;
@@ -73,7 +76,7 @@ void setup() {
   sei();
 
   while (true) {
-    switch (random8(7))
+    switch (random8(8))
     {
     case 0: RUN_ANIMATION_ARGS(AlternatingBlink)
     case 1: RUN_ANIMATION_ARGS(GlitterBlink)
@@ -82,6 +85,7 @@ void setup() {
     case 4: RUN_ANIMATION_ARGS(MoveAnimation)
     case 5: RUN_ANIMATION_ARGS(SprinkleAnimation)
     case 6: RUN_ANIMATION_ARGS(FallingStacks)
+    case 7: RotationAnimation::createRandom(animationBuffer);
     }
     animationLoop(*animationBuffer.get());
   }
@@ -143,82 +147,10 @@ void fallingStacks() {
   }
 }
 
-template<size_t numColors>
-void rotation(const uint32_t (&sectionColors)[numColors],
-              const uint8_t sectionMultiply,
-              const bool isSolid) {
-  constexpr uint8_t rotationCount = 5;
-
-  const uint8_t numSections = sectionMultiply * numColors;
-  const uint8_t colorWidth = NUM_LEDS / numSections;
-
-  const uint8_t colorOffset = random8(numColors);
-
-  uint8_t offset = 0;
-
-  for (int8_t section = numSections - 1; section >= 0; section--) {
-    uint8_t len = colorWidth;
-    if (section == 0) {
-      len = NUM_LEDS - offset;
-    }
-    CRGB color = sectionColors[(colorOffset + section) % numColors];
-    if (isSolid) {
-      fill_solid(&leds[offset], len, color);
-    } else {
-      CRGB sndColor = sectionColors[(colorOffset + section + 1) % numColors];
-      fill_gradient_RGB(&leds[offset], len, sndColor, color);
-    }
-    offset += colorWidth;
-  }
-
-  uint8_t rotation = rotationCount;
-  while (rotation-- > 0) {
-    for (uint8_t step = 0; step < NUM_LEDS; step++) {
-      FastLED.show();
-      CRGB temp = rotation == 0 ? CRGB::Black : leds[0];
-      memmove(leds, &leds[1], sizeof(CRGB) * (NUM_LEDS - 1));
-      leds[NUM_LEDS - 1] = temp;
-      delay(50);
-    }
-  }
-}
-
-void rotation(const uint8_t mode, const uint8_t sectionMultiply, const bool isSolid) {
-  switch (mode)
-  {
-  case 0:
-    {
-      const uint32_t c[] = {CRGB::White, CRGB::Black};
-      rotation(c, sectionMultiply, isSolid);
-    }
-    break;
-  case 1:
-    {
-      const uint32_t c[] = {CRGB::SkyBlue, CRGB::RoyalBlue, CRGB::Blue};
-      rotation(c, sectionMultiply, isSolid);
-    }
-    break;
-  default:
-    {
-      rotation(availableColors, sectionMultiply, isSolid);
-    }
-    break;
-  }
-}
-
-void rotation() {
-  const uint8_t mode = random8(3);
-  const uint8_t sectionMultiply = random(3) + 1;
-  const bool isSolid = randomBool();
-  rotation(mode, sectionMultiply, isSolid);
-}
-
-
 typedef void (*t_movefunc)();
 
 constexpr t_movefunc movefuncs[] = {
   &fallingStacks,
-  &rotation,
 };
 constexpr uint8_t numMoveFuncs = array_size(movefuncs);
 

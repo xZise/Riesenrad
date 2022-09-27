@@ -10,6 +10,8 @@ public:
     }
   }
   virtual bool finished() = 0;
+
+  virtual bool clearOnStart() const { return true; }
 protected:
   static constexpr uint8_t frameMs = 10;
 
