@@ -8,6 +8,7 @@
 #include "alternating.hpp"
 #include "snake.hpp"
 #include "island.hpp"
+#include "move.hpp"
 
 volatile uint8_t frame = 0;
 
@@ -66,12 +67,13 @@ void setup() {
   sei();
 
   while (true) {
-    switch (random8(4))
+    switch (random8(5))
     {
     case 0: RUN_ANIMATION(AlternatingBlink)
     case 1: RUN_ANIMATION(GlitterBlink)
     case 2: RUN_ANIMATION(SnakeAnimation)
     case 3: RUN_ANIMATION(IslandAnimation)
+    case 4: RUN_ANIMATION(MoveAnimation)
     }
   }
 }
@@ -130,35 +132,6 @@ void fallingStacks() {
     FastLED.show();
     delay(100);
   }
-}
-
-void move3() {
-  constexpr uint8_t trail_length = NUM_LEDS / 10 + 1;
-
-  const uint8_t start = random8(NUM_LEDS);
-  const bool reverse = randomBool();
-
-  for (uint8_t remaining_iterations = NUM_LEDS; remaining_iterations > 0; remaining_iterations--) {
-    uint8_t actualTrail = min(trail_length, remaining_iterations - 1);
-    for (uint8_t i = 0; i < actualTrail; i++) {
-      uint8_t index = getLedOffsetIndex(remaining_iterations, start);
-      index = getLedOffsetIndex(index, i, reverse);
-      if (i == 0) {
-        leds[index] = CRGB::Red;
-      } else {
-        leds[index] = CRGB::Wheat;
-      }
-    }
-
-    if (remaining_iterations < 4) {
-      fadeToBlackBy(leds, NUM_LEDS, 255 / remaining_iterations);
-    }
-
-    FastLED.show();
-    delay(100);
-    allBlack();
-  }
-  delay(100);
 }
 
 template<size_t numColors>
@@ -236,7 +209,6 @@ typedef void (*t_movefunc)();
 
 constexpr t_movefunc movefuncs[] = {
   &fallingStacks,
-  &move3,
   &sprinkle,
   &rotation,
 };
