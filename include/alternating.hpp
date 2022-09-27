@@ -18,9 +18,6 @@ protected:
     IterationAnimation::step();
   }
 private:
-  static constexpr uint8_t iterationCount = 10;
-  static constexpr uint16_t frameDelay = 500;
-
   CRGB _firstColor;
   CRGB _secondColor;
 };

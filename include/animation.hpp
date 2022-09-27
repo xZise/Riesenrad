@@ -57,15 +57,14 @@ protected:
   virtual void step() override {
     _iteration += 1;
   }
+
+  constexpr uint8_t iteration_count() { return iterationCount; }
 };
 
 class GlitterBlink: public IterationAnimation<20, 50> {
 public:
-  static constexpr uint8_t frameDelay = 100;
-  static constexpr uint8_t iterationCount = 20;
-
   virtual bool finished() override {
-    return (_iteration >= iterationCount) && (_newSpecs = glitterSpecs);
+    return (_iteration >= iteration_count()) && (_newSpecs = glitterSpecs);
   }
 protected:
   virtual void step() override {
