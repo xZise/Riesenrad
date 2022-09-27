@@ -52,6 +52,8 @@ void setupTimer() {
   #endif
 }
 
+#define RUN_ANIMATION(animationType) { animationType animation; animationLoop(animation); } break;
+
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
@@ -66,26 +68,10 @@ void setup() {
   while (true) {
     switch (random8(4))
     {
-    case 0: {
-        AlternatingBlink animation;
-        animationLoop(animation);
-      }
-      break;
-    case 1: {
-        GlitterBlink animation;
-        animationLoop(animation);
-      }
-      break;
-    case 2: {
-        SnakeAnimation animation;
-        animationLoop(animation);
-      }
-      break;
-    case 3: {
-        IslandAnimation animation;
-        animationLoop(animation);
-      }
-      break;
+    case 0: RUN_ANIMATION(AlternatingBlink)
+    case 1: RUN_ANIMATION(GlitterBlink)
+    case 2: RUN_ANIMATION(SnakeAnimation)
+    case 3: RUN_ANIMATION(IslandAnimation)
     }
   }
 }
