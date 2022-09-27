@@ -38,15 +38,15 @@ void setupTimer() {
 
   #define TIMER_VEC TIMER3_COMPA_vect
   #elif ARDUINO_AVR_UNO
-  TCCR0A = (1<<WGM01);    //Set the CTC mode
-  OCR0A = 156; //Value for ORC0A for 10ms
+  // Uses timer 2 as the prescaler > 64 with timer 0 did not work
+  TCCR2A = (1<<WGM21);    //Set the CTC mode
+  OCR2A = 156; //Value for ORC0A for 10ms
 
-  TIMSK0 |= (1<<OCIE0A);   //Set the interrupt request
+  TIMSK2 |= (1<<OCIE2A);   //Set the interrupt request
 
-  TCCR0B |= (1<<CS02);    //Set the prescale 1/1024 clock
-  TCCR0B |= (1<<CS00);
+  TCCR2B |= (1 << CS22) | (1<<CS21) | (1 << CS20);    //Set the prescale 1/1024 clock
 
-  #define TIMER_VEC TIMER0_COMPA_vect
+  #define TIMER_VEC TIMER2_COMPA_vect
   #else
   #error "Timer could not be set up for board"
   #endif
