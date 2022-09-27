@@ -10,6 +10,7 @@
 #include "snake.hpp"
 #include "island.hpp"
 #include "move.hpp"
+#include "stacks.hpp"
 
 #include "animationbuffer.hpp"
 
@@ -72,7 +73,7 @@ void setup() {
   sei();
 
   while (true) {
-    switch (random8(6))
+    switch (random8(7))
     {
     case 0: RUN_ANIMATION_ARGS(AlternatingBlink)
     case 1: RUN_ANIMATION_ARGS(GlitterBlink)
@@ -80,6 +81,7 @@ void setup() {
     case 3: RUN_ANIMATION_ARGS(IslandAnimation)
     case 4: RUN_ANIMATION_ARGS(MoveAnimation)
     case 5: RUN_ANIMATION_ARGS(SprinkleAnimation)
+    case 6: RUN_ANIMATION_ARGS(FallingStacks)
     }
     animationLoop(*animationBuffer.get());
   }

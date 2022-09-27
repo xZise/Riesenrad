@@ -19,6 +19,10 @@ protected:
     return milliseconds / Animation::frameMs;
   }
 
+  static const uint8_t framesPerMs(const uint16_t milliseconds) {
+    return milliseconds / Animation::frameMs;
+  }
+
   virtual bool calculateFrame() = 0;
 };
 
@@ -43,6 +47,34 @@ protected:
   }
 
   virtual void step() = 0;
+};
+
+class DynamicFrameAnimation: public Animation {
+public:
+  DynamicFrameAnimation(const uint16_t inital_delay_ms) : _next_delay(Animation::framesPerMs(inital_delay_ms)) {}
+protected:
+  virtual bool calculateFrame() override {
+    if (_frame < _next_delay) {
+      _frame++;
+      if (_frame == 1) {
+        const uint16_t next_delay_ms = step();
+        if (next_delay_ms > 0) {
+          _next_delay = Animation::framesPerMs(next_delay_ms);
+        }
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      _frame = 0;
+      return false;
+    }
+  }
+
+  virtual uint16_t step() = 0;
+private:
+  uint8_t _frame = 0;
+  uint8_t _next_delay;
 };
 
 template<uint8_t iterationCount, uint16_t frameDelay>
