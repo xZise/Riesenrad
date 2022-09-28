@@ -47,6 +47,15 @@ public:
     }
     return value;
   }
+
+  bool any() const {
+    for (const uint8_t value : data) {
+      if (value > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
 private:
   static constexpr uint8_t bitsPerData = sizeof(uint8_t) * 8;
 
