@@ -11,6 +11,8 @@ constexpr size_t array_size(T (&)[N]) {
 }
 
 constexpr uint8_t NUM_LEDS = 30;
+static_assert(NUM_LEDS < 0xff);
+
 constexpr uint8_t DATA_PIN = 8;
 
 constexpr uint8_t LED_PIN = 7;
