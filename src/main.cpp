@@ -21,6 +21,10 @@ void animationLoop(Animation& animation) {
       frame--;
     }
     sei();
+    // FIXME: This should be overhauled, as this leads to code which changed
+    //        something in frame(), only to determine that it has finished.
+    //        When an animation made one step there it would be only visible for
+    //        a very short duration of time.
     if (update) {
       animation.frame();
       if (animation.finished()) {

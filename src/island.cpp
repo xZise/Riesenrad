@@ -7,9 +7,9 @@ bool IslandAnimation::finished() {
   //     4 2 1 3 5
 
   if (islandWidth % 2 == 0) {
-    return _islandIndex == 0;
+    return _islandIndex == (uint8_t)-1;
   } else {
-    return _islandIndex == islandWidth - 1;
+    return _islandIndex == islandWidth;
   }
 }
 
