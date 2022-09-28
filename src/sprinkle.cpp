@@ -50,56 +50,47 @@ bool SprinkleState::step() {
   return hasStopped;
 }
 
+SprinkleAnimation::SprinkleAnimation() {
+}
 
-void sprinkle() {
-  constexpr uint8_t num_sprinkles = NUM_LEDS / 2;
+void SprinkleAnimation::step() {
+  uint8_t placementTests = num_sprinkles - _sprinkles;
+  while (placementTests-- > 0) {
+    if (_remainingSprinkles > _sprinkles && random8() < 50) {
+      // Try to get a new LED for a new sprinkle
+      bool isUnique;
+      uint8_t newLed;
+      uint8_t freeIndex;
+      do {
+        isUnique = true;
+        newLed = random8(NUM_LEDS);
 
-  uint8_t sprinkles = 0;
-  uint8_t remainingSprinkles = NUM_LEDS * 2;
-  SprinkleState sprinkleLeds[num_sprinkles];
-
-  while (remainingSprinkles > 0) {
-    uint8_t placementTests = num_sprinkles - sprinkles;
-    while (placementTests-- > 0) {
-      if (remainingSprinkles > sprinkles && random8() < 50) {
-        // Try to get a new LED for a new sprinkle
-        bool isUnique;
-        uint8_t newLed;
-        uint8_t freeIndex;
-        do {
-          isUnique = true;
-          newLed = random8(NUM_LEDS);
-
-          freeIndex = num_sprinkles;
-          for (uint8_t sprinkleLed = 0; sprinkleLed < num_sprinkles; sprinkleLed++) {
-            if (sprinkleLeds[sprinkleLed].isActive()) {
-              if (sprinkleLeds[sprinkleLed].getLed() == newLed) {
-                isUnique = false;
-                break;
-              }
-            } else if (sprinkleLed < freeIndex) {
-              freeIndex = sprinkleLed;
+        freeIndex = num_sprinkles;
+        for (uint8_t sprinkleLed = 0; sprinkleLed < num_sprinkles; sprinkleLed++) {
+          if (_sprinkleLeds[sprinkleLed].isActive()) {
+            if (_sprinkleLeds[sprinkleLed].getLed() == newLed) {
+              isUnique = false;
+              break;
             }
+          } else if (sprinkleLed < freeIndex) {
+            freeIndex = sprinkleLed;
           }
-        } while (!isUnique);
-
-        if (freeIndex < num_sprinkles) {
-          sprinkleLeds[freeIndex].init(newLed, random8(10, 50));
-          sprinkles++;
         }
+      } while (!isUnique);
+
+      if (freeIndex < num_sprinkles) {
+        _sprinkleLeds[freeIndex].init(newLed, random8(10, 50));
+        _sprinkles++;
       }
     }
+  }
 
-    if (sprinkles > 0) {
-      for (uint8_t sprinkleLed = 0; sprinkleLed < num_sprinkles; sprinkleLed++) {
-        if (sprinkleLeds[sprinkleLed].step()) {
-          sprinkles--;
-          remainingSprinkles--;
-        }
+  if (_sprinkles > 0) {
+    for (uint8_t sprinkleLed = 0; sprinkleLed < num_sprinkles; sprinkleLed++) {
+      if (_sprinkleLeds[sprinkleLed].step()) {
+        _sprinkles--;
+        _remainingSprinkles--;
       }
     }
-
-    FastLED.show();
-    delay(50);
   }
 }

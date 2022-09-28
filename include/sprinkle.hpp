@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-
+#include "animation.hpp"
 
 class SprinkleState
 {
@@ -23,4 +23,19 @@ private:
   bool _brighten;
 };
 
-void sprinkle();
+class SprinkleAnimation : public FrameAnimation<50> {
+public:
+  SprinkleAnimation();
+
+  virtual bool finished() override {
+    return _remainingSprinkles == 0;
+  }
+protected:
+  virtual void step() override;
+private:
+  static constexpr uint8_t num_sprinkles = NUM_LEDS / 2;
+
+  uint8_t _sprinkles = 0;
+  uint8_t _remainingSprinkles = NUM_LEDS * 2;
+  SprinkleState _sprinkleLeds[num_sprinkles];
+};

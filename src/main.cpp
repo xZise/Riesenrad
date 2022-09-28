@@ -67,13 +67,14 @@ void setup() {
   sei();
 
   while (true) {
-    switch (random8(5))
+    switch (random8(6))
     {
     case 0: RUN_ANIMATION(AlternatingBlink)
     case 1: RUN_ANIMATION(GlitterBlink)
     case 2: RUN_ANIMATION(SnakeAnimation)
     case 3: RUN_ANIMATION(IslandAnimation)
     case 4: RUN_ANIMATION(MoveAnimation)
+    case 5: RUN_ANIMATION(SprinkleAnimation)
     }
   }
 }
@@ -209,7 +210,6 @@ typedef void (*t_movefunc)();
 
 constexpr t_movefunc movefuncs[] = {
   &fallingStacks,
-  &sprinkle,
   &rotation,
 };
 constexpr uint8_t numMoveFuncs = array_size(movefuncs);
