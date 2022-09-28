@@ -58,7 +58,6 @@ void SnakeAnimation::move() {
     const uint8_t actualIndex = _reverse ? NUM_LEDS - led - 1 : led;
     leds[actualIndex] = color;
   }
-  FastLED.show();
   if (apples.reset(_position)) {
     _length++;
   }
