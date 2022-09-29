@@ -30,4 +30,6 @@ private:
   void shrink();
 
   void move();
+
+  uint8_t snakeIndex(const uint8_t index) const;
 };

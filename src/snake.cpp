@@ -26,13 +26,12 @@ void SnakeAnimation::move() {
     }
   }
   while (missingApples-- > 0) {
+    uint8_t index = 0;
     uint8_t newApple;
     do {
       newApple = random8(NUM_LEDS);
-      if (newApple >= _position && newApple <= _position + _length) {
-        continue;
-      }
-    } while(apples[newApple]);
+      index = snakeIndex(newApple);
+    } while(index < _length || apples[newApple]);
     apples.set(newApple);
   }
 
@@ -42,13 +41,9 @@ void SnakeAnimation::move() {
     if (led == _position) {
       color = head;
     } else {
-      uint8_t index = led - _position;
-      // if led < position -> led (or index) "would be" the number of leds higher
-      if (led < _position) {
-        index += NUM_LEDS;
-      }
+      uint8_t index = snakeIndex(led);
       if (index <= _length) {
-        color = (index >> 1) % 2 == 0 ? evenBody : oddBody;
+        color = ((index - 1) >> 1) % 2 == 0 ? evenBody : oddBody;
       } else if (apples[led]) {
         color = CRGB::Red;
       } else {
@@ -66,4 +61,13 @@ void SnakeAnimation::move() {
   } else {
     _position = NUM_LEDS - 1;
   }
+}
+
+uint8_t SnakeAnimation::snakeIndex(const uint8_t index) const {
+  uint8_t relative = index - _position;
+  // if index < position -> the index "would be" the number of leds higher
+  if (index < _position) {
+    relative += NUM_LEDS;
+  }
+  return relative;
 }
