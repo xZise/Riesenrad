@@ -67,11 +67,11 @@ public:
   }
 protected:
   virtual void step() override {
+    _steps--;
+
     CRGB temp = _steps < NUM_LEDS ? CRGB::Black : leds[0];
     memmove(leds, &leds[1], sizeof(CRGB) * (NUM_LEDS - 1));
     leds[NUM_LEDS - 1] = temp;
-
-    _steps--;
   }
 private:
   static constexpr uint8_t rotationCount = 5;

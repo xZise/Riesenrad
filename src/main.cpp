@@ -32,6 +32,10 @@ void animationLoop(Animation& animation) {
     //        something in frame(), only to determine that it has finished.
     //        When an animation made one step there it would be only visible for
     //        a very short duration of time.
+    //        Checking finished() before, does not help very much, as it would
+    //        just check it 10ms later on the next iteration. A better solution
+    //        is probably to add something to FrameAnimation, so that finished()
+    //        changes on the last tick before the next frame is calculated.
     if (update) {
       animation.frame();
       if (animation.finished()) {
