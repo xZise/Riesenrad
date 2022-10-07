@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <FastLED.h>
+#include <new.h>
 
 #include "leds.hpp"
 #include "sprinkle.hpp"
@@ -57,7 +58,34 @@ void setupTimer() {
   #endif
 }
 
-#define RUN_ANIMATION(animationType) { animationType animation; animationLoop(animation); } break;
+#define RUN_ANIMATION_ARGS(animationType, ...) animationBuffer.create<animationType>(__VA_ARGS__); break;
+
+class AnimationBuffer {
+public:
+  Animation* get() {
+    if (!_created) return nullptr;
+    return reinterpret_cast<Animation*>(_animationData);
+  }
+
+  template<class T, class... Args>
+  void create(Args&&... args) {
+    static_assert(sizeof(T) <= animationDataSize);
+    Animation* animation = get();
+    if (animation != nullptr) {
+      animation->~Animation();
+    }
+    _created = false;
+    new (_animationData) T(args...);
+    _created = true;
+  }
+private:
+  // largest size of any animation class, maybe this can be automated?
+  static constexpr uint8_t animationDataSize = 155;
+  uint8_t _animationData[animationDataSize];
+  bool _created { false };
+};
+
+AnimationBuffer animationBuffer;
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
@@ -73,13 +101,14 @@ void setup() {
   while (true) {
     switch (random8(6))
     {
-    case 0: RUN_ANIMATION(AlternatingBlink)
-    case 1: RUN_ANIMATION(GlitterBlink)
-    case 2: RUN_ANIMATION(SnakeAnimation)
-    case 3: RUN_ANIMATION(IslandAnimation)
-    case 4: RUN_ANIMATION(MoveAnimation)
-    case 5: RUN_ANIMATION(SprinkleAnimation)
+    case 0: RUN_ANIMATION_ARGS(AlternatingBlink)
+    case 1: RUN_ANIMATION_ARGS(GlitterBlink)
+    case 2: RUN_ANIMATION_ARGS(SnakeAnimation)
+    case 3: RUN_ANIMATION_ARGS(IslandAnimation)
+    case 4: RUN_ANIMATION_ARGS(MoveAnimation)
+    case 5: RUN_ANIMATION_ARGS(SprinkleAnimation)
     }
+    animationLoop(*animationBuffer.get());
   }
 }
 
