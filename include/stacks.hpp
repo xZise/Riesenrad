@@ -15,6 +15,8 @@ public:
   virtual bool finished() override {
     return wipe_mode() && _step > CENTER_FAR;
   }
+
+  virtual const char* name() const override { return "StackAnimation"; }
 protected:
   virtual uint16_t step() override {
     if (wipe_mode()) {

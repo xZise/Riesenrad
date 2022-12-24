@@ -65,6 +65,8 @@ public:
   virtual bool clearOnStart() const override {
     return false;
   }
+
+  virtual const char* name() const override { return "RotationAnimation"; }
 protected:
   virtual void step() override {
     _steps--;

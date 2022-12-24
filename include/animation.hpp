@@ -12,6 +12,9 @@ public:
   virtual bool finished() = 0;
 
   virtual bool clearOnStart() const { return true; }
+
+  // TODO: Improve in such a way, that it cannot be nullptr
+  virtual const char* name() const = 0;
 protected:
   static constexpr uint8_t frameMs = 10;
 
@@ -100,6 +103,8 @@ public:
   virtual bool finished() override {
     return (_iteration >= iteration_count()) && (_newSpecs = glitterSpecs);
   }
+
+  virtual const char* name() const override { return "GlitterBlink"; }
 protected:
   virtual void step() override {
     _newSpecs = glitterSpecs;

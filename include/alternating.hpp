@@ -9,6 +9,8 @@ public:
 
   AlternatingBlink() : AlternatingBlink(getRandomColor(), getRandomColor()) {
   }
+
+  virtual const char* name() const override { return "AlternatingBlink"; }
 protected:
   virtual void step() override {
     for (uint8_t led = 0; led < NUM_LEDS; led++) {

@@ -11,6 +11,8 @@ public:
   virtual bool finished() override {
     return _length == 0;
   }
+
+  virtual const char* name() const override { return "SnakeAnimation"; }
 protected:
   virtual void step() override;
 private:

@@ -8,6 +8,8 @@ public:
   IslandAnimation() : _color(getRandomColor()) {}
 
   virtual bool finished() override;
+
+  virtual const char* name() const override { return "IslandAnimation"; }
 protected:
   virtual void step() override;
 private:
