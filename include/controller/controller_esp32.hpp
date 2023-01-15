@@ -16,6 +16,7 @@ public:
 
   virtual void setupTimer() override {
     xTaskCreatePinnedToCore(&taskLoop, "Animationloop", 2000, this, 1, nullptr, 1);
+    xTaskCreatePinnedToCore(&motorLoop, "Motorloop", 2000, this, 1, nullptr, 1);
   }
 
   virtual void begin() override {
@@ -38,6 +39,68 @@ public:
       taskYIELD();
     }
   }
+
+  void innerMotorLoop() {
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+    constexpr uint8_t STRING_PIN = 14;
+    constexpr uint8_t STRING_CHAN = 1;
+    ledcSetup(STRING_CHAN, 20000, 8);
+    ledcWrite(STRING_CHAN, 0);
+    ledcAttachPin(STRING_PIN, STRING_CHAN);
+
+    constexpr uint8_t max_speed = 0xe0;
+    constexpr uint8_t min_speed = 0x60;
+    constexpr uint8_t speed_step = (max_speed - min_speed) / calculateSteps(2000);
+    constexpr uint16_t running_steps = calculateSteps(60000);
+    constexpr uint16_t stopped_steps = calculateSteps(10000);
+    uint8_t speed = 0;
+    uint16_t remainingSteps = 0;
+    MotorState state = MotorState::Stopped;
+    while(true) {
+      bool updateSpeed = false;
+      switch (state)
+      {
+      case MotorState::RampDown:
+        if (speed > min_speed + speed_step) {
+          speed -= speed_step;
+        } else {
+          speed = 0;
+          state = MotorState::Stopped;
+          remainingSteps = stopped_steps;
+        }
+        Serial.println("RampDown");
+        updateSpeed = true;
+        break;
+      case MotorState::RampUp:
+        if (speed < max_speed - speed_step) {
+          speed += speed_step;
+        } else {
+          speed = max_speed;
+          state = MotorState::Running;
+          remainingSteps = running_steps;
+        }
+        Serial.println("RampUp");
+        updateSpeed = true;
+        break;
+      }
+      if (updateSpeed) {
+        Serial.printf("New speed 0x%02x\n", speed);
+        ledcWrite(STRING_CHAN, speed);
+      } else {
+        if (remainingSteps == 0) {
+          if (state == MotorState::Stopped) {
+            state = MotorState::RampUp;
+          } else {
+            state = MotorState::RampDown;
+          }
+        } else {
+        remainingSteps -= 1;
+        }
+      }
+      vTaskDelay(step_time / portTICK_PERIOD_MS);
+    }
+  }
 protected:
   virtual void delayFrame() override {
     vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -47,8 +110,24 @@ private:
 
   HAMqtt* _mqtt;
 
+  enum class MotorState {
+    Stopped,
+    RampUp,
+    Running,
+    RampDown,
+  };
+
+  static constexpr uint32_t step_time = 100;
+  static constexpr uint32_t calculateSteps(uint32_t milliseconds) {
+    return milliseconds / step_time;
+  }
+
   static void taskLoop(void* parameters) {
     static_cast<ESP32Controller<DATA_PIN>*>(parameters)->outsideLoop();
+  }
+
+  static void motorLoop(void* parameters) {
+    static_cast<ESP32Controller<DATA_PIN>*>(parameters)->innerMotorLoop();
   }
 };
 
