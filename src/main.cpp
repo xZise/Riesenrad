@@ -1,6 +1,10 @@
 #include <Arduino.h>
 #include <FastLED.h>
-#include <new.h>
+#include <new>
+
+#ifdef ARDUINO_ARCH_ESP32
+#include <freertos/task.h>
+#endif
 
 #include "leds.hpp"
 #include "sprinkle.hpp"
@@ -15,6 +19,28 @@
 
 #include "animationbuffer.hpp"
 
+void outsideLoop();
+
+#ifdef ARDUINO_ARCH_ESP32
+void taskLoop(void* pvParameters) {
+  outsideLoop();
+}
+
+void animationLoop(Animation& animation) {
+  allBlack();
+  while (true) {
+    // FIXME: This should be overhauled, as this leads to code which changed
+    //        something in frame(), only to determine that it has finished.
+    //        When an animation made one step there it would be only visible for
+    //        a very short duration of time.
+    animation.frame();
+    if (animation.finished()) {
+      return;
+    }
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+  }
+}
+#else
 volatile uint8_t frame = 0;
 
 void animationLoop(Animation& animation) {
@@ -44,6 +70,7 @@ void animationLoop(Animation& animation) {
     }
   }
 }
+#endif
 
 void setupTimer() {
   #ifdef ARDUINO_AVR_MICRO
@@ -63,22 +90,20 @@ void setupTimer() {
   TCCR2B |= (1 << CS22) | (1<<CS21) | (1 << CS20);    //Set the prescale 1/1024 clock
 
   #define TIMER_VEC TIMER2_COMPA_vect
+  #elif ARDUINO_ARCH_ESP32
+  xTaskCreatePinnedToCore(&taskLoop, "Animationloop", 2000, NULL, 1, NULL, 1);
   #else
   #error "Timer could not be set up for board"
   #endif
 }
 
-void setup() {
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
+#ifdef TIMER_VEC
+ISR(TIMER_VEC) {
+  frame++;
+}
+#endif
 
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
-  FastLED.setBrightness(30);
-
-  setupTimer();
-
-  sei();
-
+void outsideLoop() {
   while (true) {
     switch (random8(8))
     {
@@ -95,8 +120,27 @@ void setup() {
   }
 }
 
-ISR(TIMER_VEC) {
-  frame++;
+void setup() {
+  #ifndef ARDUINO_ARCH_ESP32
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, HIGH);
+  #endif
+
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.setBrightness(30);
+
+  setupTimer();
+
+  #ifdef ARDUINO_ARCH_ESP32
+  // Do not run into "loop" which is running outdated code anyway.
+  while(true) {
+    taskYIELD();
+  }
+  #else
+  sei();
+
+  outsideLoop();
+  #endif
 }
 
 void fallingStacks() {

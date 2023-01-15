@@ -10,7 +10,7 @@ void MoveAnimation::step() {
   uint8_t remaining_iterations = iteration_count() - _iteration - 1;
 
   if (remaining_iterations > 0) {
-    uint8_t actualTrail = min(trail_length, remaining_iterations - 1);
+    uint8_t actualTrail = min(trail_length, (uint8_t)(remaining_iterations - 1));
     for (uint8_t i = 0; i < actualTrail; i++) {
       uint8_t index = getLedOffsetIndex(remaining_iterations, _start);
       index = getLedOffsetIndex(index, i, _reverse);
