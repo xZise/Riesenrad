@@ -33,7 +33,10 @@ public:
   constexpr uint8_t rgbLEDpin() { return DATA_PIN; }
 
   const bool animationsEnabled() const { return _animationsEnabled; }
+  const bool nextAnimationRequested() const { return _nextAnimationRequested; }
+
   void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
+  void requestNextAnimation() { _nextAnimationRequested = true; }
 
   void onPublishAnimation(publish_animation_t handler) { _publishAnimation = handler; }
 protected:
@@ -54,7 +57,8 @@ protected:
       //        is probably to add something to FrameAnimation, so that finished()
       //        changes on the last tick before the next frame is calculated.
       animation.frame();
-      if (animation.finished()) {
+      if (_nextAnimationRequested || animation.finished()) {
+        _nextAnimationRequested = false;
         return;
       }
     }
@@ -88,6 +92,7 @@ protected:
     }
   }
 private:
+  bool _nextAnimationRequested;
   bool _animationsEnabled;
 
   bool createAnimation() {

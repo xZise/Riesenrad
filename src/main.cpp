@@ -33,6 +33,7 @@ HADevice device;
 HAMqtt mqtt(client, device);
 
 HALight animationsSwitch("animations", HALight::BrightnessFeature);
+HAButton nextAnimation("next");
 
 HASensor currentAnimation("current-animation");
 #endif
@@ -53,6 +54,12 @@ void onStateCommand(bool state, HALight* sender)
 void onBrightnessCommand(uint8_t brightness, HALight* sender) {
   FastLED.setBrightness(brightness);
   sender->setBrightness(brightness); // report brightness back to the Home Assistant
+}
+
+void onButtonCommand(HAButton* button) {
+  if (button == &nextAnimation) {
+    controller.requestNextAnimation();
+  }
 }
 
 void publishAnimation(const Animation* animation) {
@@ -96,13 +103,17 @@ void setup() {
 
   // set device's details (optional)
   device.setName("Ferriswheel");
-  device.setSoftwareVersion("1.0.0");
+  device.setSoftwareVersion("1.1.0");
 
   // handle switch state
   animationsSwitch.onStateCommand(onStateCommand);
   animationsSwitch.onBrightnessCommand(onBrightnessCommand);
   animationsSwitch.setName("Animations");
   animationsSwitch.setState(false);
+
+  nextAnimation.onCommand(onButtonCommand);
+  nextAnimation.setName("Skip Animation");
+  nextAnimation.setIcon("mdi:skip-next");
 
   currentAnimation.setName("Current");
   currentAnimation.setIcon("mdi:animation");
