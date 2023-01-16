@@ -35,9 +35,11 @@ public:
 
   const bool animationsEnabled() const { return _animationsEnabled; }
   const bool nextAnimationRequested() const { return _nextAnimationRequested; }
+  const bool motorEnabled() const { return _motorEnabled; }
 
   virtual void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
   void requestNextAnimation() { _nextAnimationRequested = true; }
+  void setMotorEnabled(bool enabled) { _motorEnabled = enabled; }
 
   void onPublishAnimation(publish_animation_t handler) { _publishAnimation = handler; }
 protected:
@@ -95,6 +97,7 @@ protected:
 private:
   bool _nextAnimationRequested;
   bool _animationsEnabled;
+  bool _motorEnabled;
 
   bool createAnimation() {
     uint8_t selectedAnimation = random8(8);

@@ -35,6 +35,8 @@ HAMqtt mqtt(client, device);
 HALight animationsSwitch("animations", HALight::BrightnessFeature);
 HAButton nextAnimation("next");
 
+HASwitch motorSwitch("motor");
+
 HASensor currentAnimation("current-animation");
 #endif
 
@@ -48,6 +50,12 @@ ISR(TIMER_VEC) {
 void onStateCommand(bool state, HALight* sender)
 {
   controller.setAnimationsEnabled(state);
+  sender->setState(state);
+}
+
+void onSwitchCommand(bool state, HASwitch* sender)
+{
+  controller.setMotorEnabled(state);
   sender->setState(state);
 }
 
@@ -114,6 +122,9 @@ void setup() {
   animationsSwitch.onBrightnessCommand(onBrightnessCommand);
   animationsSwitch.setName("Animations");
 
+  motorSwitch.onCommand(onSwitchCommand);
+  motorSwitch.setName("Motor");
+
   nextAnimation.onCommand(onButtonCommand);
   nextAnimation.setName("Skip Animation");
   nextAnimation.setIcon("mdi:skip-next");
@@ -130,6 +141,7 @@ void setup() {
   animationsSwitch.setState(controller.animationsEnabled());
   publishAnimation(nullptr);
   #else
+  controller.setMotorEnabled(true);
   controller.setAnimationsEnabled(true);
   #endif
 

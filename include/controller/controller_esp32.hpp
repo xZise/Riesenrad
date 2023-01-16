@@ -58,6 +58,9 @@ public:
     uint16_t remainingSteps = 0;
     MotorState state = MotorState::Stopped;
     while(true) {
+      if (!this->motorEnabled() && state != MotorState::Stopped && state != MotorState::RampDown) {
+        state = MotorState::RampDown;
+      }
       bool updateSpeed = false;
       switch (state)
       {
@@ -89,13 +92,15 @@ public:
         ledcWrite(STRING_CHAN, speed);
       } else {
         if (remainingSteps == 0) {
-          if (state == MotorState::Stopped) {
-            state = MotorState::RampUp;
-          } else {
-            state = MotorState::RampDown;
+          if (this->motorEnabled()) {
+            if (state == MotorState::Stopped) {
+              state = MotorState::RampUp;
+            } else {
+              state = MotorState::RampDown;
+            }
           }
         } else {
-        remainingSteps -= 1;
+          remainingSteps -= 1;
         }
       }
       vTaskDelay(step_time / portTICK_PERIOD_MS);
