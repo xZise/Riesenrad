@@ -6,119 +6,31 @@
 #include <freertos/task.h>
 #endif
 
-#include "leds.hpp"
-#include "sprinkle.hpp"
-
-#include "animation.hpp"
-#include "alternating.hpp"
-#include "snake.hpp"
-#include "island.hpp"
-#include "move.hpp"
-#include "stacks.hpp"
-#include "rotation.hpp"
-
-#include "animationbuffer.hpp"
-
-void outsideLoop();
-
-#ifdef ARDUINO_ARCH_ESP32
-void taskLoop(void* pvParameters) {
-  outsideLoop();
-}
-
-void animationLoop(Animation& animation) {
-  allBlack();
-  while (true) {
-    // FIXME: This should be overhauled, as this leads to code which changed
-    //        something in frame(), only to determine that it has finished.
-    //        When an animation made one step there it would be only visible for
-    //        a very short duration of time.
-    animation.frame();
-    if (animation.finished()) {
-      return;
-    }
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-}
+#ifdef ARDUINO_AVR_MICRO
+#include "controller/controller_micro.hpp"
+#elif ARDUINO_AVR_UNO
+#include "controller/controller_uno.hpp"
+#elif ARDUINO_ARCH_ESP32
+#include "controller/controller_esp32.hpp"
 #else
-volatile uint8_t frame = 0;
-
-void animationLoop(Animation& animation) {
-  if (animation.clearOnStart()) {
-    allBlack();
-  }
-  while (true) {
-    cli();
-    bool update = frame > 0;
-    if (update) {
-      frame--;
-    }
-    sei();
-    // FIXME: This should be overhauled, as this leads to code which changed
-    //        something in frame(), only to determine that it has finished.
-    //        When an animation made one step there it would be only visible for
-    //        a very short duration of time.
-    //        Checking finished() before, does not help very much, as it would
-    //        just check it 10ms later on the next iteration. A better solution
-    //        is probably to add something to FrameAnimation, so that finished()
-    //        changes on the last tick before the next frame is calculated.
-    if (update) {
-      animation.frame();
-      if (animation.finished()) {
-        return;
-      }
-    }
-  }
-}
+#error "Board is not supported"
 #endif
 
-void setupTimer() {
-  #ifdef ARDUINO_AVR_MICRO
-  // Arduino micro: Timer 3
-  OCR3A = 156;
-  TCCR3B = (1 << WGM32) | (1 << CS30) | (1 << CS32);
-  TIMSK3 = (1 << OCIE3A);
+#include "leds.hpp"
 
-  #define TIMER_VEC TIMER3_COMPA_vect
-  #elif ARDUINO_AVR_UNO
-  // Uses timer 2 as the prescaler > 64 with timer 0 did not work
-  TCCR2A = (1<<WGM21);    //Set the CTC mode
-  OCR2A = 156; //Value for ORC0A for 10ms
-
-  TIMSK2 |= (1<<OCIE2A);   //Set the interrupt request
-
-  TCCR2B |= (1 << CS22) | (1<<CS21) | (1 << CS20);    //Set the prescale 1/1024 clock
-
-  #define TIMER_VEC TIMER2_COMPA_vect
-  #elif ARDUINO_ARCH_ESP32
-  xTaskCreatePinnedToCore(&taskLoop, "Animationloop", 2000, NULL, 1, NULL, 1);
-  #else
-  #error "Timer could not be set up for board"
-  #endif
-}
+#ifdef ARDUINO_AVR_MICRO
+Ferriswheel::ArduinoMicroController<8> controller;
+#elif ARDUINO_AVR_UNO
+Ferriswheel::ArduinoUnoController<8> controller;
+#elif ARDUINO_ARCH_ESP32
+Ferriswheel::ESP32Controller<12> controller;
+#endif
 
 #ifdef TIMER_VEC
 ISR(TIMER_VEC) {
-  frame++;
+  controller.nextFrame();
 }
 #endif
-
-void outsideLoop() {
-  while (true) {
-    switch (random8(8))
-    {
-    case 0: RUN_ANIMATION_ARGS(AlternatingBlink)
-    case 1: RUN_ANIMATION_ARGS(GlitterBlink)
-    case 2: RUN_ANIMATION_ARGS(SnakeAnimation)
-    case 3: RUN_ANIMATION_ARGS(IslandAnimation)
-    case 4: RUN_ANIMATION_ARGS(MoveAnimation)
-    case 5: RUN_ANIMATION_ARGS(SprinkleAnimation)
-    case 6: RUN_ANIMATION_ARGS(FallingStacks)
-    case 7: RotationAnimation::createRandom(animationBuffer);
-    }
-    animationLoop(*animationBuffer.get());
-  }
-}
 
 void setup() {
   #ifndef ARDUINO_ARCH_ESP32
@@ -126,21 +38,12 @@ void setup() {
   digitalWrite(LED_PIN, HIGH);
   #endif
 
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<WS2812B, controller.rgbLEDpin(), GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(30);
 
-  setupTimer();
+  controller.setupTimer();
 
-  #ifdef ARDUINO_ARCH_ESP32
-  // Do not run into "loop" which is running outdated code anyway.
-  while(true) {
-    taskYIELD();
-  }
-  #else
-  sei();
-
-  outsideLoop();
-  #endif
+  controller.run();
 }
 
 void fallingStacks() {

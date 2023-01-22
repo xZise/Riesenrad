@@ -14,11 +14,7 @@ constexpr uint8_t NUM_LEDS = 30;
 static_assert(NUM_LEDS < 0xff);
 
 
-#ifdef ARDUINO_ARCH_ESP32
-constexpr uint8_t DATA_PIN = 12;
-#else
-constexpr uint8_t DATA_PIN = 8;
-
+#ifndef ARDUINO_ARCH_ESP32
 constexpr uint8_t LED_PIN = 7;
 #endif
 
