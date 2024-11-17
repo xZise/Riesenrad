@@ -38,6 +38,8 @@ void setup() {
   digitalWrite(LED_PIN, HIGH);
   #endif
 
+  Serial.begin(57600);
+
   FastLED.addLeds<WS2812B, controller.rgbLEDpin(), GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(30);
 

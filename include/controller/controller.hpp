@@ -68,7 +68,15 @@ protected:
         RotationAnimation::createRandom(animationBuffer);
         break;
       }
-      animationLoop(*animationBuffer.get());
+      Animation& animation = *animationBuffer.get();
+      const char* name = animation.name();
+      if (name) {
+        Serial.print("Selected animation: ");
+        Serial.println(name);
+      } else {
+        Serial.println("Selected animation without name.");
+      }
+      animationLoop(animation);
     }
   }
 };
