@@ -30,3 +30,5 @@
 !.vscode/*.code-snippets
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,platformio
+
+/include/secrets.hpp
