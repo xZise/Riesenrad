@@ -29,6 +29,9 @@ public:
   virtual void run() = 0;
 
   constexpr uint8_t rgbLEDpin() { return DATA_PIN; }
+
+  const bool animationsEnabled() const { return _animationsEnabled; }
+  void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
 protected:
   virtual void delayFrame() = 0;
 
@@ -36,7 +39,7 @@ protected:
     if (animation.clearOnStart()) {
       allBlack();
     }
-    while (true) {
+    while (_animationsEnabled) {
       delayFrame();
       // FIXME: This should be overhauled, as this leads to code which changed
       //        something in frame(), only to determine that it has finished.
@@ -55,6 +58,13 @@ protected:
 
   void outsideLoop() {
     while (true) {
+      if (!_animationsEnabled) {
+        allBlack();
+        FastLED.show();
+        while (!_animationsEnabled) {
+          delayFrame();
+        }
+      }
       switch (random8(8))
       {
       case 0: RUN_ANIMATION_ARGS(AlternatingBlink)
@@ -79,6 +89,8 @@ protected:
       animationLoop(animation);
     }
   }
+private:
+  bool _animationsEnabled;
 };
 
 };
