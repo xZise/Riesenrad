@@ -7,9 +7,13 @@ class RotationAnimation : public FrameAnimation<50> {
 public:
   template<size_t numColors>
   RotationAnimation(const uint32_t (&sectionColors)[numColors],
-                    const uint8_t sectionMultiply,
+                    uint8_t sectionMultiply,
                     const bool isSolid) : _steps(rotationCount * NUM_LEDS) {
-    const uint8_t numSections = sectionMultiply * numColors;
+    uint8_t numSections;
+    do {
+      numSections = sectionMultiply * numColors;
+      sectionMultiply--;
+    } while (numSections > NUM_LEDS && sectionMultiply > 0);
     const uint8_t colorWidth = NUM_LEDS / numSections;
 
     const uint8_t colorOffset = random8(numColors);
