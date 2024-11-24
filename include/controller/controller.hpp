@@ -21,6 +21,8 @@
 namespace Ferriswheel
 {
 
+typedef void (*publish_animation_t)(const Animation* animation);
+
 template<uint8_t DATA_PIN>
 class Controller {
 public:
@@ -32,6 +34,8 @@ public:
 
   const bool animationsEnabled() const { return _animationsEnabled; }
   void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
+
+  void onPublishAnimation(publish_animation_t handler) { _publishAnimation = handler; }
 protected:
   virtual void delayFrame() = 0;
 
@@ -80,6 +84,7 @@ protected:
       }
       Animation& animation = *animationBuffer.get();
       const char* name = animation.name();
+      publishAnimation(&animation);
       if (name) {
         Serial.print("Selected animation: ");
         Serial.println(name);
@@ -91,6 +96,14 @@ protected:
   }
 private:
   bool _animationsEnabled;
+
+  publish_animation_t _publishAnimation;
+
+  void publishAnimation(const Animation* animation) {
+    if (_publishAnimation) {
+      _publishAnimation(animation);
+    }
+  }
 };
 
 };

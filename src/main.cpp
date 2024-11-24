@@ -33,6 +33,8 @@ HADevice device;
 HAMqtt mqtt(client, device);
 
 HALight animationsSwitch("animations", HALight::BrightnessFeature);
+
+HASensor currentAnimation("current-animation");
 #endif
 
 #ifdef TIMER_VEC
@@ -51,6 +53,15 @@ void onStateCommand(bool state, HALight* sender)
 void onBrightnessCommand(uint8_t brightness, HALight* sender) {
   FastLED.setBrightness(brightness);
   sender->setBrightness(brightness); // report brightness back to the Home Assistant
+}
+
+void publishAnimation(const Animation* animation) {
+  if (animation == nullptr) {
+    currentAnimation.setValue("Stopped");
+  } else {
+    const char* name = animation->name();
+    currentAnimation.setValue(name);
+  }
 }
 #endif
 
@@ -92,6 +103,10 @@ void setup() {
   animationsSwitch.onBrightnessCommand(onBrightnessCommand);
   animationsSwitch.setName("Animations");
   animationsSwitch.setState(false);
+
+  currentAnimation.setName("Current");
+  currentAnimation.setIcon("mdi:animation");
+  publishAnimation(nullptr);
 
   mqtt.begin(BROKER_ADDR, MQTT_USER, MQTT_PASSWORD);
 
