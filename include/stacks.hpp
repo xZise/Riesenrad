@@ -34,8 +34,12 @@ private:
   static constexpr uint8_t stackLedCount = stackLength * stackCount;
   CRGB _colors[stackLedCount];
 
+  // defines the start of the stacks
   uint8_t _offset;
+  // total number of non-moving (already stacked) leds
   uint8_t _stack { 0 };
+  // current step within a stack, when falling
+  // current step of the complete wipe
   uint8_t _step { 0 };
 
   const bool wipe_mode() const { return _stack >= NUM_LEDS; }
@@ -70,11 +74,11 @@ private:
   static constexpr uint8_t CENTER_NEAR = NUM_LEDS / 2 - (1 - NUM_LEDS % 2);
 
   void step_wipe() {
-    _step++;
     const uint8_t center_far = CENTER_FAR + _step;
     const uint8_t center_near = CENTER_NEAR - _step;
 
     *getLedOffset(center_near, _offset) = CRGB::Black;
     *getLedOffset(center_far, _offset) = CRGB::Black;
+    _step++;
   }
 };
