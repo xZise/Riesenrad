@@ -63,6 +63,7 @@ protected:
   void outsideLoop() {
     while (true) {
       if (!_animationsEnabled) {
+        publishAnimation(nullptr);
         allBlack();
         FastLED.show();
         while (!_animationsEnabled) {
@@ -81,6 +82,8 @@ protected:
           Serial.println("Selected animation without name.");
         }
         animationLoop(animation);
+      } else {
+        publishAnimation(nullptr);
       }
     }
   }
