@@ -13,6 +13,7 @@ public:
 protected:
   virtual void step() override;
 private:
+  // TODO: Use divisor-information from stack animation
   static constexpr uint8_t numIslands = 9;
   static constexpr uint8_t islandWidth = NUM_LEDS / numIslands;
 
