@@ -69,33 +69,58 @@ protected:
           delayFrame();
         }
       }
-      switch (random8(8))
-      {
-      case 0: RUN_ANIMATION_ARGS(AlternatingBlink)
-      case 1: RUN_ANIMATION_ARGS(GlitterBlink)
-      case 2: RUN_ANIMATION_ARGS(SnakeAnimation)
-      case 3: RUN_ANIMATION_ARGS(IslandAnimation)
-      case 4: RUN_ANIMATION_ARGS(MoveAnimation)
-      case 5: RUN_ANIMATION_ARGS(SprinkleAnimation)
-      case 6: RUN_ANIMATION_ARGS(FallingStacks)
-      case 7:
-        RotationAnimation::createRandom(animationBuffer);
-        break;
+
+      if (createAnimation()) {
+        Animation& animation = *animationBuffer.get();
+        const char* name = animation.name();
+        publishAnimation(&animation);
+        if (name) {
+          Serial.print("Selected animation: ");
+          Serial.println(name);
+        } else {
+          Serial.println("Selected animation without name.");
+        }
+        animationLoop(animation);
       }
-      Animation& animation = *animationBuffer.get();
-      const char* name = animation.name();
-      publishAnimation(&animation);
-      if (name) {
-        Serial.print("Selected animation: ");
-        Serial.println(name);
-      } else {
-        Serial.println("Selected animation without name.");
-      }
-      animationLoop(animation);
     }
   }
 private:
   bool _animationsEnabled;
+
+  bool createAnimation() {
+    uint8_t selectedAnimation = random8(8);
+    switch (selectedAnimation)
+    {
+    case 0:
+      animationBuffer.create<AlternatingBlink>();
+      return true;
+    case 1:
+      animationBuffer.create<GlitterBlink>();
+      return true;
+    case 2:
+      animationBuffer.create<SnakeAnimation>();
+      return true;
+    case 3:
+      animationBuffer.create<IslandAnimation>();
+      return true;
+    case 4:
+      animationBuffer.create<MoveAnimation>();
+      return true;
+    case 5:
+      animationBuffer.create<SprinkleAnimation>();
+      return true;
+    case 6:
+      animationBuffer.create<FallingStacks>();
+      return true;
+    case 7:
+      RotationAnimation::createRandom(animationBuffer);
+      return true;
+    default:
+      Serial.print("Animation selected was index");
+      Serial.println(selectedAnimation);
+      return false;
+    }
+  }
 
   publish_animation_t _publishAnimation;
 

@@ -3,8 +3,6 @@
 #include "animation.hpp"
 #include <new>
 
-#define RUN_ANIMATION_ARGS(animationType, ...) animationBuffer.create<animationType>(__VA_ARGS__); break;
-
 class AnimationBuffer {
 public:
   Animation* get() {
