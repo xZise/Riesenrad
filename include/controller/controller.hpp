@@ -27,6 +27,7 @@ template<uint8_t DATA_PIN>
 class Controller {
 public:
   virtual void setupTimer() = 0;
+  virtual void begin() {}
 
   virtual void run() = 0;
 
@@ -35,7 +36,7 @@ public:
   const bool animationsEnabled() const { return _animationsEnabled; }
   const bool nextAnimationRequested() const { return _nextAnimationRequested; }
 
-  void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
+  virtual void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
   void requestNextAnimation() { _nextAnimationRequested = true; }
 
   void onPublishAnimation(publish_animation_t handler) { _publishAnimation = handler; }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ArduinoHA.h>
+#include <ArduinoNvs.h>
 
 #include <freertos/task.h>
 #include "controller/controller.hpp"
@@ -17,6 +18,18 @@ public:
     xTaskCreatePinnedToCore(&taskLoop, "Animationloop", 2000, this, 1, nullptr, 1);
   }
 
+  virtual void begin() override {
+    NVS.begin();
+
+    bool wasEnabled = NVS.getInt(NVS_KEY_ANIMATIONS) > 0;
+    Controller<DATA_PIN>::setAnimationsEnabled(wasEnabled);
+  }
+
+  virtual void setAnimationsEnabled(bool enabled) override {
+    NVS.setInt(NVS_KEY_ANIMATIONS, enabled ? 1 : 0);
+    Controller<DATA_PIN>::setAnimationsEnabled(enabled);
+  }
+
   virtual void run() override {
     while (true) {
       if (_mqtt) {
@@ -30,6 +43,8 @@ protected:
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 private:
+  static constexpr const char* NVS_KEY_ANIMATIONS = "animations";
+
   HAMqtt* _mqtt;
 
   static void taskLoop(void* parameters) {

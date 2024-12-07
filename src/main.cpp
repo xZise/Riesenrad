@@ -83,6 +83,8 @@ void setup() {
   FastLED.addLeds<WS2812B, controller.rgbLEDpin(), GRB>(leds, NUM_LEDS);
   FastLED.setBrightness(30);
 
+  controller.begin();
+
   #ifdef ARDUINO_ARCH_ESP32
   // Unique ID must be set!
   byte mac[6] = {0};
@@ -109,7 +111,6 @@ void setup() {
   animationsSwitch.onStateCommand(onStateCommand);
   animationsSwitch.onBrightnessCommand(onBrightnessCommand);
   animationsSwitch.setName("Animations");
-  animationsSwitch.setState(false);
 
   nextAnimation.onCommand(onButtonCommand);
   nextAnimation.setName("Skip Animation");
