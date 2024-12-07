@@ -90,6 +90,8 @@ void setup() {
   byte mac[6] = {0};
   WiFi.macAddress(mac);
   device.setUniqueId(mac, sizeof(mac));
+  device.enableSharedAvailability();
+  device.enableLastWill();
 
   // connect to wifi
   WiFi.setHostname("Ferriswheel");
