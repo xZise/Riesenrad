@@ -118,11 +118,15 @@ void setup() {
 
   currentAnimation.setName("Current");
   currentAnimation.setIcon("mdi:animation");
-  publishAnimation(nullptr);
 
   mqtt.begin(BROKER_ADDR, MQTT_USER, MQTT_PASSWORD);
 
   controller.setMqtt(&mqtt);
+
+  mqtt.loop();
+
+  animationsSwitch.setState(controller.animationsEnabled());
+  publishAnimation(nullptr);
   #else
   controller.setAnimationsEnabled(true);
   #endif
