@@ -9,7 +9,7 @@ public:
 
   virtual bool finished() override;
 
-  virtual const char* name() const override { return "IslandAnimation"; }
+  ANIMATIONNAME("Islands")
 protected:
   virtual void step() override;
 private:

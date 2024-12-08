@@ -12,7 +12,7 @@ public:
     return _length == 0;
   }
 
-  virtual const char* name() const override { return "SnakeAnimation"; }
+  ANIMATIONNAME("Snake")
 protected:
   virtual void step() override;
 private:

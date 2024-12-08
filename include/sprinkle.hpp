@@ -31,7 +31,7 @@ public:
     return _remainingSprinkles == 0;
   }
 
-  virtual const char* name() const override { return "SprinkleAnimation"; }
+  ANIMATIONNAME("Sprinkle")
 protected:
   virtual void step() override;
 private:

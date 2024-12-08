@@ -70,7 +70,7 @@ public:
     return false;
   }
 
-  virtual const char* name() const override { return "RotationAnimation"; }
+  ANIMATIONNAME("Rotating segments")
 protected:
   virtual void step() override {
     _steps--;

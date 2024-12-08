@@ -37,6 +37,12 @@ HAButton nextAnimation("next");
 
 HASwitch motorSwitch("motor");
 
+#define X(field) \
+  HASwitch enable##field##Switch("enable-" #field);
+
+ENABLED_ANIMATIONS_LIST
+#undef X
+
 HASensor currentAnimation("current-animation");
 #endif
 
@@ -57,6 +63,20 @@ void onSwitchCommand(bool state, HASwitch* sender)
 {
   controller.setMotorEnabled(state);
   sender->setState(state);
+}
+
+void onAnimationStateCommand(bool state, HASwitch* sender)
+{
+#define X(field)                                       \
+  if (sender == &enable##field##Switch) {              \
+    controller.set##field##Enabled(state);             \
+    sender->setState(controller.is##field##Enabled()); \
+    return;                                            \
+  }
+
+ENABLED_ANIMATIONS_LIST
+#undef X
+  Serial.println("Unknown animation switch!");
 }
 
 void onBrightnessCommand(uint8_t brightness, HALight* sender) {
@@ -125,6 +145,13 @@ void setup() {
   motorSwitch.onCommand(onSwitchCommand);
   motorSwitch.setName("Motor");
 
+#define X(field) \
+  enable##field##Switch.setName(field::NAME); \
+  enable##field##Switch.onCommand(onAnimationStateCommand);
+
+ENABLED_ANIMATIONS_LIST
+#undef X
+
   nextAnimation.onCommand(onButtonCommand);
   nextAnimation.setName("Skip Animation");
   nextAnimation.setIcon("mdi:skip-next");
@@ -139,6 +166,13 @@ void setup() {
   mqtt.loop();
 
   animationsSwitch.setState(controller.animationsEnabled());
+
+#define X(field)                                                   \
+  enable##field##Switch.setState(controller.is##field##Enabled()); \
+
+ENABLED_ANIMATIONS_LIST
+#undef X
+
   publishAnimation(nullptr);
   #else
   controller.setMotorEnabled(true);

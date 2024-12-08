@@ -23,6 +23,16 @@ namespace Ferriswheel
 
 typedef void (*publish_animation_t)(const Animation* animation);
 
+#define ENABLED_ANIMATIONS_LIST \
+    X(AlternatingBlink)         \
+    X(GlitterBlink)             \
+    X(SnakeAnimation)           \
+    X(IslandAnimation)          \
+    X(MoveAnimation)            \
+    X(SprinkleAnimation)        \
+    X(FallingStacks)            \
+    X(RotationAnimation)
+
 template<uint8_t DATA_PIN>
 class Controller {
 public:
@@ -42,6 +52,14 @@ public:
   void setMotorEnabled(bool enabled) { _motorEnabled = enabled; }
 
   void onPublishAnimation(publish_animation_t handler) { _publishAnimation = handler; }
+
+#define X(field) \
+  bool is##field##Enabled() const { return _enabled##field; } \
+  void set##field##Enabled(bool enabled) { _enabled##field = enabled; }
+
+ENABLED_ANIMATIONS_LIST
+#undef X
+
 protected:
   virtual void delayFrame() = 0;
 
@@ -99,39 +117,78 @@ private:
   bool _animationsEnabled;
   bool _motorEnabled;
 
+#define X(field) \
+  bool _enabled##field = true;
+
+ENABLED_ANIMATIONS_LIST
+#undef X
+
+  uint8_t enabledAnimationCount() {
+    uint8_t result = 0;
+
+#define X(field) \
+    if (_enabled##field) result++;
+
+ENABLED_ANIMATIONS_LIST
+#undef X
+    return result;
+  }
+
+  bool checkEnabled(uint8_t& selected, bool currentState) {
+    if (currentState) {
+      if (selected == 0) {
+        return true;
+      }
+      selected--;
+    }
+    return false;
+  }
+
   bool createAnimation() {
-    uint8_t selectedAnimation = random8(8);
-    switch (selectedAnimation)
-    {
-    case 0:
+    uint8_t animationCount = enabledAnimationCount();
+    uint8_t selectedAnimation = random8(animationCount);
+    Serial.print("Selected animation ");
+    Serial.print(selectedAnimation);
+    Serial.print(" of ");
+    Serial.println(animationCount);
+    uint8_t originalSelectedAnimation = selectedAnimation;
+    if (checkEnabled(selectedAnimation, _enabledAlternatingBlink)) {
       animationBuffer.create<AlternatingBlink>();
       return true;
-    case 1:
+    }
+    if (checkEnabled(selectedAnimation, _enabledGlitterBlink)) {
       animationBuffer.create<GlitterBlink>();
       return true;
-    case 2:
+    }
+    if (checkEnabled(selectedAnimation, _enabledSnakeAnimation)) {
       animationBuffer.create<SnakeAnimation>();
       return true;
-    case 3:
+    }
+    if (checkEnabled(selectedAnimation, _enabledIslandAnimation)) {
       animationBuffer.create<IslandAnimation>();
       return true;
-    case 4:
+    }
+    if (checkEnabled(selectedAnimation, _enabledMoveAnimation)) {
       animationBuffer.create<MoveAnimation>();
       return true;
-    case 5:
+    }
+    if (checkEnabled(selectedAnimation, _enabledSprinkleAnimation)) {
       animationBuffer.create<SprinkleAnimation>();
       return true;
-    case 6:
+    }
+    if (checkEnabled(selectedAnimation, _enabledFallingStacks)) {
       animationBuffer.create<FallingStacks>();
       return true;
-    case 7:
+    }
+    if (checkEnabled(selectedAnimation, _enabledRotationAnimation)) {
       RotationAnimation::createRandom(animationBuffer);
       return true;
-    default:
-      Serial.print("Animation selected was index");
-      Serial.println(selectedAnimation);
-      return false;
     }
+    Serial.print("Original animation selected was index ");
+    Serial.print(originalSelectedAnimation);
+    Serial.print(" remaining value is ");
+    Serial.println(selectedAnimation);
+    return false;
   }
 
   publish_animation_t _publishAnimation;

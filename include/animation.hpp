@@ -2,6 +2,10 @@
 
 #include "leds.hpp"
 
+#define ANIMATIONNAME(NAME_VALUE)                            \
+  virtual const char* name() const override { return NAME; } \
+  static constexpr const char* NAME = NAME_VALUE;
+
 class Animation {
 public:
   void frame() {
@@ -104,7 +108,7 @@ public:
     return (_iteration >= iteration_count()) && (_newSpecs = glitterSpecs);
   }
 
-  virtual const char* name() const override { return "GlitterBlink"; }
+  ANIMATIONNAME("Glitter")
 protected:
   virtual void step() override {
     _newSpecs = glitterSpecs;
