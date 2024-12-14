@@ -47,6 +47,7 @@ public:
   const bool nextAnimationRequested() const { return _nextAnimationRequested; }
   const bool motorEnabled() const { return _motorEnabled; }
 
+  virtual void setInnerLightBrightness(uint8_t brightness) = 0;
   virtual void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
   void requestNextAnimation() { _nextAnimationRequested = true; }
   void setMotorEnabled(bool enabled) { _motorEnabled = enabled; }

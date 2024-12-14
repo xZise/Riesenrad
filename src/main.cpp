@@ -33,6 +33,7 @@ HADevice device;
 HAMqtt mqtt(client, device);
 
 HALight animationsSwitch("animations", HALight::BrightnessFeature);
+HALight innerLight("inner", HALight::BrightnessFeature);
 HAButton nextAnimation("next");
 
 HASwitch motorSwitch("motor");
@@ -55,7 +56,11 @@ ISR(TIMER_VEC) {
 #ifdef ARDUINO_ARCH_ESP32
 void onStateCommand(bool state, HALight* sender)
 {
-  controller.setAnimationsEnabled(state);
+  if (sender == &animationsSwitch) {
+    controller.setAnimationsEnabled(state);
+  } else if (sender == &innerLight) {
+    controller.setInnerLightBrightness(state ? 100 : 0);
+  }
   sender->setState(state);
 }
 
@@ -80,9 +85,13 @@ ENABLED_ANIMATIONS_LIST
 }
 
 void onBrightnessCommand(uint8_t brightness, HALight* sender) {
-  brightness = map(brightness, 0, 0xff, 0, Config::MAX_BRIGHTNESS);
-  FastLED.setBrightness(brightness);
-  brightness = map(brightness, 0, Config::MAX_BRIGHTNESS, 0, 0xff);
+  if (sender == &animationsSwitch) {
+    brightness = map(brightness, 0, 0xff, 0, Config::MAX_BRIGHTNESS);
+    FastLED.setBrightness(brightness);
+    brightness = map(brightness, 0, Config::MAX_BRIGHTNESS, 0, 0xff);
+  } else if (sender == &innerLight) {
+    controller.setInnerLightBrightness(brightness);
+  }
   sender->setBrightness(brightness);
 }
 
@@ -146,6 +155,10 @@ void setup() {
   animationsSwitch.onStateCommand(onStateCommand);
   animationsSwitch.onBrightnessCommand(onBrightnessCommand);
   animationsSwitch.setName("Animations");
+
+  innerLight.onStateCommand(onStateCommand);
+  innerLight.onBrightnessCommand(onBrightnessCommand);
+  innerLight.setName("Inner Light");
 
   motorSwitch.onCommand(onSwitchCommand);
   motorSwitch.setName("Motor");

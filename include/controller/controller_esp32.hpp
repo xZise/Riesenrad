@@ -20,11 +20,23 @@ public:
     xTaskCreatePinnedToCore(&motorLoop, "Motorloop", 2000, this, 1, nullptr, 1);
   }
 
+  static constexpr uint8_t INNER_LIGHT_CHAN = 2;
+
   virtual void begin() override {
     NVS.begin();
 
     bool wasEnabled = NVS.getInt(NVS_KEY_ANIMATIONS) > 0;
     Controller<DATA_PIN>::setAnimationsEnabled(wasEnabled);
+
+    constexpr uint8_t INNER_LIGHT_PIN = 32;
+    ledcSetup(INNER_LIGHT_CHAN, 20000, 8);
+    ledcWrite(INNER_LIGHT_CHAN, NVS.getInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS));
+    ledcAttachPin(INNER_LIGHT_PIN, INNER_LIGHT_CHAN);
+  }
+
+  virtual void setInnerLightBrightness(uint8_t brightness) override {
+    ledcWrite(INNER_LIGHT_CHAN, brightness);
+    NVS.setInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS, brightness);
   }
 
   virtual void setAnimationsEnabled(bool enabled) override {
@@ -110,6 +122,7 @@ protected:
   }
 private:
   static constexpr const char* NVS_KEY_ANIMATIONS = "animations";
+  static constexpr const char* NVS_KEY_INNER_LIGHT_BRIGHTNESS = "inner_light_brightness";
 
   HAMqtt* _mqtt;
 
