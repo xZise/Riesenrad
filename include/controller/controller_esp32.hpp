@@ -129,9 +129,9 @@ public:
       }
 
       if (current_speed < _target_speed) {
-        current_speed = std::min<uint16_t>(static_cast<uint16_t>(current_speed) + acceleration_per_step, _target_speed);
+        current_speed = std::min<int16_t>(static_cast<int16_t>(current_speed) + acceleration_per_step, _target_speed);
       } else if (current_speed > _target_speed) {
-        current_speed = std::max<uint16_t>(static_cast<uint16_t>(current_speed) - acceleration_per_step, _target_speed);
+        current_speed = std::max<int16_t>(static_cast<int16_t>(current_speed) - acceleration_per_step, _target_speed);
       }
 
       ledcWrite(MOTOR_CHANNEL, current_speed);
