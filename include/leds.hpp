@@ -10,7 +10,7 @@ constexpr size_t array_size(T (&)[N]) {
     return N;
 }
 
-constexpr uint8_t NUM_LEDS = 30;
+constexpr uint8_t NUM_LEDS = 99;
 static_assert(NUM_LEDS < 0xff);
 
 

@@ -6,3 +6,5 @@ These are some features that may be added (in no particular order):
 * When there is a separate light switch, make it possible to change the color
 * Additional animations (e.g. like shooting stars or "waving" colors)
 * Control a separate light strip with brightness
+* Automatically calculate the maximum necessary size for AnimationBuffer
+* Save all settings in NVS

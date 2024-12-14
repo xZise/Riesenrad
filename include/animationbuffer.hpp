@@ -23,7 +23,7 @@ public:
   }
 private:
   // largest size of any animation class, maybe this can be automated?
-  static constexpr uint8_t animationDataSize = 155;
+  static constexpr uint8_t animationDataSize = 204;
   uint8_t _animationData[animationDataSize];
   bool _created { false };
 };
