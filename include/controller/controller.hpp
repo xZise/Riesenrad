@@ -36,12 +36,6 @@ typedef void (*publish_animation_t)(const Animation* animation);
 template<uint8_t DATA_PIN>
 class Controller {
 public:
-  struct StaticLightColor {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-  };
-
   virtual void setupTimer() = 0;
   virtual void begin() {
     NVS.begin();
@@ -62,7 +56,7 @@ public:
   virtual uint8_t innerLightBrightness() const = 0;
   virtual bool animationsEnabled() const = 0;
   const bool staticLightModeLightsOn() const { return _static_light_mode_lights_on; }
-  const StaticLightColor staticLightModeColor() const { return _static_light_mode_color; }
+  const CRGB staticLightModeColor() const { return _static_light_mode_color; }
   const bool nextAnimationRequested() const { return _nextAnimationRequested; }
   const bool continuousMode() const { return _continuousMode; }
 
@@ -75,7 +69,7 @@ public:
     _static_light_mode_lights_on = lights_on;
     NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON, lights_on ? 1 : 0);
   }
-  void setStaticLightModeColor(StaticLightColor color) {
+  void setStaticLightModeColor(CRGB color) {
     _static_light_mode_color = color;
     NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED, color.red);
     NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN, color.green);
@@ -156,7 +150,7 @@ private:
 
   bool _static_light_mode_lights_on = false;
 
-  StaticLightColor _static_light_mode_color = { 255, 255, 255 };
+  CRGB _static_light_mode_color = CRGB::White;
 
   static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON = "static_light_mode_lights_on";
   static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED = "static_light_mode_color_red";
