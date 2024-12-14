@@ -37,6 +37,8 @@ HALight innerLight("inner", HALight::BrightnessFeature);
 HAButton nextAnimation("next");
 
 HASwitch motorSwitch("motor");
+HANumber motorSpeed("motor-speed", HANumber::PrecisionP0);
+HASwitch continuousSwitch("continuous");
 
 #define X(field) \
   HASwitch enable##field##Switch("enable-" #field);
@@ -64,10 +66,24 @@ void onStateCommand(bool state, HALight* sender)
   sender->setState(state);
 }
 
-void onSwitchCommand(bool state, HASwitch* sender)
+void onMotorSwitchCommand(bool state, HASwitch* sender)
 {
   controller.setMotorEnabled(state);
   sender->setState(state);
+}
+
+void onContinuousSwitchCommand(bool state, HASwitch* sender)
+{
+  controller.setContinuousMode(state);
+  sender->setState(state);
+}
+
+void onMotorSpeedCommand(HANumeric value, HANumber* sender)
+{
+  uint8_t speed = value.toUInt8();
+  speed = constrain(speed, Config::MIN_SPEED, Config::MAX_SPEED_UPPER_LIMIT);
+  controller.setMotorMaxSpeed(speed);
+  sender->setState(speed);
 }
 
 void onAnimationStateCommand(bool state, HASwitch* sender)
@@ -160,8 +176,11 @@ void setup() {
   innerLight.onBrightnessCommand(onBrightnessCommand);
   innerLight.setName("Inner Light");
 
-  motorSwitch.onCommand(onSwitchCommand);
+  motorSwitch.onCommand(onMotorSwitchCommand);
   motorSwitch.setName("Motor");
+
+  continuousSwitch.onCommand(onContinuousSwitchCommand);
+  continuousSwitch.setName("Continuous");
 
 #define X(field) \
   enable##field##Switch.setName(field::NAME); \

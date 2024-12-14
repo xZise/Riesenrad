@@ -45,12 +45,14 @@ public:
 
   const bool animationsEnabled() const { return _animationsEnabled; }
   const bool nextAnimationRequested() const { return _nextAnimationRequested; }
-  const bool motorEnabled() const { return _motorEnabled; }
+  const bool continuousMode() const { return _continuousMode; }
 
+  virtual void setMotorEnabled(bool enabled) = 0;
+  virtual void setMotorMaxSpeed(uint8_t speed) = 0;
   virtual void setInnerLightBrightness(uint8_t brightness) = 0;
   virtual void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
   void requestNextAnimation() { _nextAnimationRequested = true; }
-  void setMotorEnabled(bool enabled) { _motorEnabled = enabled; }
+  void setContinuousMode(bool enabled) { _continuousMode = enabled; }
 
   void onPublishAnimation(publish_animation_t handler) { _publishAnimation = handler; }
 
@@ -116,7 +118,7 @@ protected:
 private:
   bool _nextAnimationRequested;
   bool _animationsEnabled;
-  bool _motorEnabled;
+  bool _continuousMode;
 
 #define X(field) \
   bool _enabled##field = true;

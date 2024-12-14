@@ -28,6 +28,9 @@ public:
     bool wasEnabled = NVS.getInt(NVS_KEY_ANIMATIONS) > 0;
     Controller<DATA_PIN>::setAnimationsEnabled(wasEnabled);
 
+    _motorEnabled = NVS.getInt(NVS_KEY_MOTOR_ENABLED) > 0;
+    _max_speed = NVS.getInt(NVS_KEY_MOTOR_SPEED);
+
     constexpr uint8_t INNER_LIGHT_PIN = 32;
     ledcSetup(INNER_LIGHT_CHAN, 20000, 8);
     ledcWrite(INNER_LIGHT_CHAN, NVS.getInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS));
@@ -37,6 +40,24 @@ public:
   virtual void setInnerLightBrightness(uint8_t brightness) override {
     ledcWrite(INNER_LIGHT_CHAN, brightness);
     NVS.setInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS, brightness);
+  }
+
+  virtual void setMotorEnabled(bool enabled) override {
+    _motorEnabled = enabled;
+    NVS.setInt(NVS_KEY_MOTOR_ENABLED, enabled ? 1 : 0);
+    if (!_motorEnabled) {
+      _target_speed = 0;
+    } else {
+      _target_speed = _max_speed;
+    }
+  }
+
+  virtual void setMotorMaxSpeed(uint8_t speed) override {
+    _max_speed = speed;
+    NVS.setInt(NVS_KEY_MOTOR_SPEED, speed);
+    if (_motorEnabled) {
+      _target_speed = _max_speed;
+    }
   }
 
   virtual void setAnimationsEnabled(bool enabled) override {
@@ -54,66 +75,50 @@ public:
   }
 
   void innerMotorLoop() {
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-
     constexpr uint8_t MOTOR_CHANNEL = 1;
     ledcSetup(MOTOR_CHANNEL, 20000, 8);
     ledcWrite(MOTOR_CHANNEL, 0);
     ledcAttachPin(Config::MOTOR_PIN, MOTOR_CHANNEL);
 
-    constexpr uint8_t speed_step = (Config::MAX_SPEED - Config::MIN_SPEED) / calculateSteps(Config::ACCELERATION_SECONDS * 1000);
-    constexpr uint16_t running_steps = calculateSteps(Config::STOP_EVERY_N_SECONDS * 1000);
-    constexpr uint16_t stopped_steps = calculateSteps(Config::STOP_FOR_N_SECONDS * 1000);
-    uint8_t speed = 0;
-    uint16_t remainingSteps = 0;
-    MotorState state = MotorState::Stopped;
-    while(true) {
-      if (!this->motorEnabled() && state != MotorState::Stopped && state != MotorState::RampDown) {
-        state = MotorState::RampDown;
-      }
-      bool updateSpeed = false;
-      switch (state)
-      {
-      case MotorState::RampDown:
-        if (speed > Config::MIN_SPEED + speed_step) {
-          speed -= speed_step;
-        } else {
-          speed = 0;
-          state = MotorState::Stopped;
-          remainingSteps = stopped_steps;
-        }
-        Serial.println("RampDown");
-        updateSpeed = true;
-        break;
-      case MotorState::RampUp:
-        if (speed < Config::MAX_SPEED - speed_step) {
-          speed += speed_step;
-        } else {
-          speed = Config::MAX_SPEED;
-          state = MotorState::Running;
-          remainingSteps = running_steps;
-        }
-        Serial.println("RampUp");
-        updateSpeed = true;
-        break;
-      }
-      if (updateSpeed) {
-        Serial.printf("New speed 0x%02x\n", speed);
-        ledcWrite(MOTOR_CHANNEL, speed);
-      } else {
-        if (remainingSteps == 0) {
-          if (this->motorEnabled()) {
-            if (state == MotorState::Stopped) {
-              state = MotorState::RampUp;
-            } else {
-              state = MotorState::RampDown;
-            }
+    constexpr uint32_t stop_every_steps = (Config::STOP_EVERY_N_SECONDS * 1000) / Config::STEP_TIME;
+    constexpr uint32_t stop_for_steps = (Config::STOP_FOR_N_SECONDS * 1000) / Config::STEP_TIME;
+    uint8_t current_speed = 0;
+    uint32_t steps_counter = 0;
+    uint8_t target_speed = _motorEnabled ? _max_speed : 0;
+
+    for (;;) {
+      vTaskDelay(Config::STEP_TIME / portTICK_PERIOD_MS);
+
+      Serial.printf("Current speed: %d, Target speed: %d, Run steps: %d\n", current_speed, _target_speed, steps_counter);
+
+      if (_motorEnabled) {
+        if (this->continuousMode()) {
+          if (_target_speed != _max_speed) {
+            _target_speed = _max_speed;
           }
         } else {
-          remainingSteps -= 1;
+          ++steps_counter;
+          if (_target_speed == _max_speed) {
+            if (steps_counter >= stop_every_steps) {
+              _target_speed = 0;
+              steps_counter = 0;
+            }
+          } else {
+            if (steps_counter >= stop_for_steps) {
+              _target_speed = _max_speed;
+              steps_counter = 0;
+            }
+          }
         }
+
+        if (current_speed < _target_speed) {
+          current_speed = std::min<uint8_t>(current_speed + acceleration_per_step, _target_speed);
+        } else if (current_speed > _target_speed) {
+          current_speed = std::max<uint8_t>(current_speed - acceleration_per_step, _target_speed);
+        }
+
+        ledcWrite(1, current_speed);
       }
-      vTaskDelay(step_time / portTICK_PERIOD_MS);
     }
   }
 protected:
@@ -123,20 +128,14 @@ protected:
 private:
   static constexpr const char* NVS_KEY_ANIMATIONS = "animations";
   static constexpr const char* NVS_KEY_INNER_LIGHT_BRIGHTNESS = "inner_light_brightness";
+  static constexpr const char* NVS_KEY_MOTOR_ENABLED = "motor_enabled";
+  static constexpr const char* NVS_KEY_MOTOR_SPEED = "motor_max_speed";
+  static constexpr uint8_t acceleration_per_step = (Config::MAX_SPEED_UPPER_LIMIT - Config::MIN_SPEED) / (2000 / Config::STEP_TIME);
 
   HAMqtt* _mqtt;
-
-  enum class MotorState {
-    Stopped,
-    RampUp,
-    Running,
-    RampDown,
-  };
-
-  static constexpr uint32_t step_time = 100;
-  static constexpr uint32_t calculateSteps(uint32_t milliseconds) {
-    return milliseconds / step_time;
-  }
+  bool _motorEnabled;
+  uint8_t _max_speed = Config::MAX_SPEED_UPPER_LIMIT;
+  uint8_t _target_speed = _max_speed;
 
   static void taskLoop(void* parameters) {
     static_cast<ESP32Controller<DATA_PIN>*>(parameters)->outsideLoop();
