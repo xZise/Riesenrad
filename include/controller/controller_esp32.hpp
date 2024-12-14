@@ -15,8 +15,21 @@ public:
   static constexpr uint8_t max_speed = 0xe0;
   static constexpr uint8_t min_speed = 0x60;
 
+  enum class MotorState {
+    Stopped,
+    RampUp,
+    Running,
+    RampDown,
+  };
+
   void setMqtt(HAMqtt* mqtt) { _mqtt = mqtt; }
-  void setMotorSpeed(uint8_t speed) { _motorSpeed = speed; }
+  void setMotorSpeed(uint8_t speed) {
+    _motorSpeed = speed;
+    if (_motorState == MotorState::Running) {
+      if (speed > _currentSpeed) _motorState = MotorState::RampUp;
+      else if (speed < _currentSpeed) _motorState = MotorState::RampDown;
+    }
+  }
 
   virtual void setupTimer() override {
     xTaskCreatePinnedToCore(&taskLoop, "Animationloop", 2000, this, 1, nullptr, 1);
@@ -56,33 +69,32 @@ public:
     constexpr uint8_t speed_step = (max_speed - min_speed) / calculateSteps(2000);
     constexpr uint16_t running_steps = calculateSteps(60000);
     constexpr uint16_t stopped_steps = calculateSteps(10000);
-    uint8_t speed = 0;
     uint16_t remainingSteps = 0;
-    MotorState state = MotorState::Stopped;
+
     while(true) {
-      if (!this->motorEnabled() && state != MotorState::Stopped && state != MotorState::RampDown) {
-        state = MotorState::RampDown;
+      if (!this->motorEnabled() && _motorState != MotorState::Stopped && _motorState != MotorState::RampDown) {
+        _motorState = MotorState::RampDown;
       }
       bool updateSpeed = false;
-      switch (state)
+      switch (_motorState)
       {
       case MotorState::RampDown:
-        if (speed > min_speed + speed_step) {
-          speed -= speed_step;
+        if (_currentSpeed > min_speed + speed_step) {
+          _currentSpeed -= speed_step;
         } else {
-          speed = 0;
-          state = MotorState::Stopped;
+          _currentSpeed = 0;
+          _motorState = MotorState::Stopped;
           remainingSteps = stopped_steps;
         }
         Serial.println("RampDown");
         updateSpeed = true;
         break;
       case MotorState::RampUp:
-        if (speed < _motorSpeed - speed_step) {
-          speed += speed_step;
+        if (_currentSpeed < _motorSpeed - speed_step) {
+          _currentSpeed += speed_step;
         } else {
-          speed = _motorSpeed;
-          state = MotorState::Running;
+          _currentSpeed = _motorSpeed;
+          _motorState = MotorState::Running;
           remainingSteps = running_steps;
         }
         Serial.println("RampUp");
@@ -90,15 +102,15 @@ public:
         break;
       }
       if (updateSpeed) {
-        Serial.printf("New speed 0x%02x\n", speed);
-        ledcWrite(STRING_CHAN, speed);
+        Serial.printf("New speed 0x%02x\n", _currentSpeed);
+        ledcWrite(STRING_CHAN, _currentSpeed);
       } else {
         if (remainingSteps == 0) {
           if (this->motorEnabled()) {
-            if (state == MotorState::Stopped) {
-              state = MotorState::RampUp;
+            if (_motorState == MotorState::Stopped) {
+              _motorState = MotorState::RampUp;
             } else {
-              state = MotorState::RampDown;
+              _motorState = MotorState::RampDown;
             }
           }
         } else {
@@ -117,13 +129,8 @@ private:
 
   HAMqtt* _mqtt;
   uint8_t _motorSpeed = min_speed;
-
-  enum class MotorState {
-    Stopped,
-    RampUp,
-    Running,
-    RampDown,
-  };
+  uint8_t _currentSpeed = 0;
+  MotorState _motorState = MotorState::Stopped;
 
   static constexpr uint32_t step_time = 100;
   static constexpr uint32_t calculateSteps(uint32_t milliseconds) {
