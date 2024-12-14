@@ -122,11 +122,11 @@ protected:
     while (true) {
       if (!_animationsEnabled) {
         publishAnimation(nullptr);
-        // if (_static_light_mode_lights_on) {
-        //   fill_solid(leds, NUM_LEDS, CRGB(_static_light_mode_color.red, _static_light_mode_color.green, _static_light_mode_color.blue));
-        // } else {
-        //   allBlack();
-        // }
+        if (_static_light_mode_lights_on) {
+          fill_solid(leds, NUM_LEDS, CRGB(_static_light_mode_color.red, _static_light_mode_color.green, _static_light_mode_color.blue));
+        } else {
+          allBlack();
+        }
         FastLED.show();
         while (!_animationsEnabled) {
           delayFrame();
