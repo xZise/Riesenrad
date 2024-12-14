@@ -20,9 +20,15 @@ public:
     xTaskCreatePinnedToCore(&motorLoop, "Motorloop", 2000, this, 1, nullptr, 1);
   }
 
+  virtual bool motorEnabled() const override { return _motorEnabled; }
+  virtual uint8_t motorMaxSpeed() const override { return _max_speed; }
+  virtual bool innerLightOn() const override { return ledcRead(INNER_LIGHT_CHAN) > 0; }
+  virtual uint8_t innerLightBrightness() const override { return _inner_light_brightness; }
+  virtual bool animationsEnabled() const override { return NVS.getInt(NVS_KEY_ANIMATIONS, 0) > 0; }
+
   static constexpr uint8_t INNER_LIGHT_CHAN = 2;
 
-  virtual void begin() {
+  virtual void begin() override {
     Controller<DATA_PIN>::begin();
 
     bool wasEnabled = NVS.getInt(NVS_KEY_ANIMATIONS, 0) > 0;
@@ -30,7 +36,7 @@ public:
 
     _motorEnabled = NVS.getInt(NVS_KEY_MOTOR_ENABLED, 0) > 0;
     _max_speed = NVS.getInt(NVS_KEY_MOTOR_SPEED, Config::MAX_SPEED_UPPER_LIMIT);
-    _inner_light_brightness = NVS.getInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS, 0);
+    _inner_light_brightness = NVS.getInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS, 125);
 
     constexpr uint8_t INNER_LIGHT_PIN = 32;
     ledcSetup(INNER_LIGHT_CHAN, 20000, 8);
@@ -120,15 +126,15 @@ public:
             }
           }
         }
-
-        if (current_speed < _target_speed) {
-          current_speed = std::min<uint8_t>(current_speed + acceleration_per_step, _target_speed);
-        } else if (current_speed > _target_speed) {
-          current_speed = std::max<uint8_t>(current_speed - acceleration_per_step, _target_speed);
-        }
-
-        ledcWrite(MOTOR_CHANNEL, current_speed);
       }
+
+      if (current_speed < _target_speed) {
+        current_speed = std::min<uint8_t>(current_speed + acceleration_per_step, _target_speed);
+      } else if (current_speed > _target_speed) {
+        current_speed = std::max<uint8_t>(current_speed - acceleration_per_step, _target_speed);
+      }
+
+      ledcWrite(MOTOR_CHANNEL, current_speed);
     }
   }
 protected:

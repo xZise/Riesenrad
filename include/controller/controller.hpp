@@ -56,7 +56,13 @@ public:
 
   constexpr uint8_t rgbLEDpin() { return DATA_PIN; }
 
-  const bool animationsEnabled() const { return _animationsEnabled; }
+  virtual bool motorEnabled() const = 0;
+  virtual uint8_t motorMaxSpeed() const = 0;
+  virtual bool innerLightOn() const = 0;
+  virtual uint8_t innerLightBrightness() const = 0;
+  virtual bool animationsEnabled() const = 0;
+  const bool staticLightModeLightsOn() const { return _static_light_mode_lights_on; }
+  const StaticLightColor staticLightModeColor() const { return _static_light_mode_color; }
   const bool nextAnimationRequested() const { return _nextAnimationRequested; }
   const bool continuousMode() const { return _continuousMode; }
 

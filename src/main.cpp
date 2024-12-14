@@ -33,7 +33,7 @@ HADevice device;
 HAMqtt mqtt(client, device);
 
 HASwitch animationsSwitch("animations");
-HALight light("light", HALight::RGBFeature);
+HALight light("light", HALight::RGBFeature | HALight::BrightnessFeature);
 HALight innerLight("inner", HALight::BrightnessFeature);
 HAButton nextAnimation("next");
 
@@ -107,9 +107,12 @@ void onLightStateCommand(bool state, HALight* sender) {
   sender->setState(state);
 }
 
+constexpr const char* NVS_KEY_LIGHT_BRIGHTNESS = "light-brightness";
+
 void onLightBrightnessCommand(uint8_t brightness, HALight* sender) {
   brightness = map(brightness, 0, 0xff, 0, Config::MAX_BRIGHTNESS);
   FastLED.setBrightness(brightness);
+  NVS.setInt(NVS_KEY_LIGHT_BRIGHTNESS, brightness);
   brightness = map(brightness, 0, Config::MAX_BRIGHTNESS, 0, 0xff);
   sender->setBrightness(brightness);
 }
@@ -149,9 +152,10 @@ void setup() {
   Serial.begin(57600);
 
   FastLED.addLeds<WS2812B, controller.rgbLEDpin(), GRB>(leds, NUM_LEDS);
-  FastLED.setBrightness(30);
 
   controller.begin();
+
+  FastLED.setBrightness(NVS.getInt(NVS_KEY_LIGHT_BRIGHTNESS, 30));
 
   #ifdef ARDUINO_ARCH_ESP32
   // Unique ID must be set!
@@ -225,6 +229,14 @@ ENABLED_ANIMATIONS_LIST
   mqtt.loop();
 
   animationsSwitch.setState(controller.animationsEnabled());
+  light.setState(controller.staticLightModeLightsOn());
+  light.setBrightness(FastLED.getBrightness());
+  light.setRGBColor({ controller.staticLightModeColor().red, controller.staticLightModeColor().green, controller.staticLightModeColor().blue });
+  innerLight.setState(controller.innerLightOn());
+  innerLight.setBrightness(controller.innerLightBrightness());
+  motorSwitch.setState(controller.motorEnabled());
+  motorSpeed.setState(controller.motorMaxSpeed());
+  continuousSwitch.setState(controller.continuousMode());
 
 #define X(field)                                                   \
   enable##field##Switch.setState(controller.is##field##Enabled()); \
