@@ -94,7 +94,7 @@ protected:
     if (animation.clearOnStart()) {
       allBlack();
     }
-    while (animationsEnabled() && _static_light_mode_lights_on) {
+    while (_animationsEnabled && _static_light_mode_lights_on) {
       delayFrame();
       // FIXME: This should be overhauled, as this leads to code which changed
       //        something in frame(), only to determine that it has finished.
