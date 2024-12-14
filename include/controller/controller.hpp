@@ -62,6 +62,7 @@ public:
 
   virtual void setMotorEnabled(bool enabled) = 0;
   virtual void setMotorMaxSpeed(uint8_t speed) = 0;
+  virtual void setInnerLightOn(bool on) = 0;
   virtual void setInnerLightBrightness(uint8_t brightness) = 0;
   virtual void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
   void setStaticLightModeLightsOn(bool lights_on) {

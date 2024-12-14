@@ -65,7 +65,7 @@ void onAnimationsStateCommand(bool state, HASwitch* sender)
 
 void onInnerLightStateCommand(bool state, HALight* sender)
 {
-  controller.setInnerLightBrightness(state ? 100 : 0);
+  controller.setInnerLightOn(state);
   sender->setState(state);
 }
 
@@ -83,8 +83,7 @@ void onContinuousSwitchCommand(bool state, HASwitch* sender)
 
 void onMotorSpeedCommand(HANumeric value, HANumber* sender)
 {
-  uint8_t speed = value.toUInt8();
-  speed = constrain(speed, Config::MIN_SPEED, Config::MAX_SPEED_UPPER_LIMIT);
+  const uint8_t speed = constrain(value.toUInt8(), Config::MIN_SPEED, Config::MAX_SPEED_UPPER_LIMIT);
   controller.setMotorMaxSpeed(speed);
   sender->setState(speed);
 }
@@ -196,6 +195,11 @@ void setup() {
 
   motorSwitch.onCommand(onMotorSwitchCommand);
   motorSwitch.setName("Motor");
+
+  motorSpeed.setMin(Config::MIN_SPEED);
+  motorSpeed.setMax(Config::MAX_SPEED_UPPER_LIMIT);
+  motorSpeed.onCommand(onMotorSpeedCommand);
+  motorSpeed.setName("Motor Speed");
 
   continuousSwitch.onCommand(onContinuousSwitchCommand);
   continuousSwitch.setName("Continuous");

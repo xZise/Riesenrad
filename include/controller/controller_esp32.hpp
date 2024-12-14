@@ -30,16 +30,26 @@ public:
 
     _motorEnabled = NVS.getInt(NVS_KEY_MOTOR_ENABLED, 0) > 0;
     _max_speed = NVS.getInt(NVS_KEY_MOTOR_SPEED, Config::MAX_SPEED_UPPER_LIMIT);
+    _inner_light_brightness = NVS.getInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS, 0);
 
     constexpr uint8_t INNER_LIGHT_PIN = 32;
     ledcSetup(INNER_LIGHT_CHAN, 20000, 8);
-    ledcWrite(INNER_LIGHT_CHAN, NVS.getInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS, 0));
+    ledcWrite(INNER_LIGHT_CHAN, _inner_light_brightness);
     ledcAttachPin(INNER_LIGHT_PIN, INNER_LIGHT_CHAN);
   }
 
+  virtual void setInnerLightOn(bool on) override {
+    if (on) {
+      ledcWrite(INNER_LIGHT_CHAN, _inner_light_brightness);
+    } else {
+      ledcWrite(INNER_LIGHT_CHAN, 0);
+    }
+  }
+
   virtual void setInnerLightBrightness(uint8_t brightness) override {
-    ledcWrite(INNER_LIGHT_CHAN, brightness);
     NVS.setInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS, brightness);
+    _inner_light_brightness = brightness;
+    ledcWrite(INNER_LIGHT_CHAN, brightness);
   }
 
   virtual void setMotorEnabled(bool enabled) override {
@@ -117,7 +127,7 @@ public:
           current_speed = std::max<uint8_t>(current_speed - acceleration_per_step, _target_speed);
         }
 
-        ledcWrite(1, current_speed);
+        ledcWrite(MOTOR_CHANNEL, current_speed);
       }
     }
   }
@@ -136,6 +146,7 @@ private:
   bool _motorEnabled;
   uint8_t _max_speed = Config::MAX_SPEED_UPPER_LIMIT;
   uint8_t _target_speed = _max_speed;
+  uint8_t _inner_light_brightness = 0;
 
   static void taskLoop(void* parameters) {
     static_cast<ESP32Controller<DATA_PIN>*>(parameters)->outsideLoop();
