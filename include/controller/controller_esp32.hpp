@@ -105,8 +105,6 @@ public:
     for (;;) {
       vTaskDelay(Config::STEP_TIME / portTICK_PERIOD_MS);
 
-      Serial.printf("Current speed: %d, Target speed: %d, Run steps: %d\n", current_speed, _target_speed, steps_counter);
-
       if (_motorEnabled) {
         if (this->continuousMode()) {
           if (_target_speed != _max_speed) {
