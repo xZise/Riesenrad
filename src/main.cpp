@@ -37,6 +37,8 @@ HAButton nextAnimation("next");
 
 HASwitch motorSwitch("motor");
 
+HASwitch continuousRunSwitch("continuous");
+
 #define X(field) \
   HASwitch enable##field##Switch("enable-" #field);
 
@@ -88,6 +90,11 @@ void onButtonCommand(HAButton* button) {
   if (button == &nextAnimation) {
     controller.requestNextAnimation();
   }
+}
+
+void onContinuousRunCommand(bool state, HASwitch* sender) {
+  controller.setContinuousRun(state);
+  sender->setState(state);
 }
 
 void publishAnimation(const Animation* animation) {
@@ -145,6 +152,9 @@ void setup() {
   motorSwitch.onCommand(onSwitchCommand);
   motorSwitch.setName("Motor");
 
+  continuousRunSwitch.onCommand(onContinuousRunCommand);
+  continuousRunSwitch.setName("Continuous Run");
+
 #define X(field) \
   enable##field##Switch.setName(field::NAME); \
   enable##field##Switch.onCommand(onAnimationStateCommand);
@@ -166,6 +176,7 @@ ENABLED_ANIMATIONS_LIST
   mqtt.loop();
 
   animationsSwitch.setState(controller.animationsEnabled());
+  continuousRunSwitch.setState(controller.getContinuousRun());
 
 #define X(field)                                                   \
   enable##field##Switch.setState(controller.is##field##Enabled()); \

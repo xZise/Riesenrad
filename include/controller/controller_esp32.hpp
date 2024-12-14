@@ -12,7 +12,12 @@ namespace Ferriswheel
 template<uint8_t DATA_PIN>
 class ESP32Controller final : public Controller<DATA_PIN> {
 public:
-  void setMqtt(HAMqtt* mqtt) { _mqtt = mqtt; }
+  ESP32Controller() {
+  }
+
+  void setMqtt(HAMqtt* mqtt) {
+    _mqtt = mqtt;
+  }
 
   virtual void setupTimer() override {
     xTaskCreatePinnedToCore(&taskLoop, "Animationloop", 2000, this, 1, nullptr, 1);
@@ -25,6 +30,12 @@ public:
     bool wasEnabled = NVS.getInt(NVS_KEY_ANIMATIONS) > 0;
     Controller<DATA_PIN>::setAnimationsEnabled(wasEnabled);
   }
+
+  void setContinuousRun(bool enabled) {
+    _continuousRun = enabled;
+  }
+
+  bool getContinuousRun() const { return _continuousRun; }
 
   virtual void setAnimationsEnabled(bool enabled) override {
     NVS.setInt(NVS_KEY_ANIMATIONS, enabled ? 1 : 0);
@@ -95,7 +106,7 @@ public:
           if (this->motorEnabled()) {
             if (state == MotorState::Stopped) {
               state = MotorState::RampUp;
-            } else {
+            } else if (!_continuousRun) {
               state = MotorState::RampDown;
             }
           }
@@ -114,6 +125,7 @@ private:
   static constexpr const char* NVS_KEY_ANIMATIONS = "animations";
 
   HAMqtt* _mqtt;
+  bool _continuousRun = false;
 
   enum class MotorState {
     Stopped,
