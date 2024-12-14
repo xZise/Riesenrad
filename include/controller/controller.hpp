@@ -37,14 +37,7 @@ template<uint8_t DATA_PIN>
 class Controller {
 public:
   virtual void setupTimer() = 0;
-  virtual void begin() {
-    NVS.begin();
-
-    _static_light_mode_lights_on = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON, 0) > 0;
-    _static_light_mode_color.red = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED, 0);
-    _static_light_mode_color.green = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN, 0);
-    _static_light_mode_color.blue = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE, 0);
-  }
+  virtual void begin() {}
 
   virtual void run() = 0;
 
@@ -55,26 +48,18 @@ public:
   virtual bool innerLightOn() const = 0;
   virtual uint8_t innerLightBrightness() const = 0;
   virtual bool animationsEnabled() const = 0;
-  const bool staticLightModeLightsOn() const { return _static_light_mode_lights_on; }
-  const CRGB staticLightModeColor() const { return _static_light_mode_color; }
-  const bool nextAnimationRequested() const { return _nextAnimationRequested; }
-  const bool continuousMode() const { return _continuousMode; }
+  virtual bool staticLightModeLightsOn() const = 0;
+  virtual CRGB staticLightModeColor() const = 0;
+  bool nextAnimationRequested() const { return _nextAnimationRequested; }
+  bool continuousMode() const { return _continuousMode; }
 
   virtual void setMotorEnabled(bool enabled) = 0;
   virtual void setMotorMaxSpeed(uint8_t speed) = 0;
   virtual void setInnerLightOn(bool on) = 0;
   virtual void setInnerLightBrightness(uint8_t brightness) = 0;
-  virtual void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
-  void setStaticLightModeLightsOn(bool lights_on) {
-    _static_light_mode_lights_on = lights_on;
-    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON, lights_on ? 1 : 0);
-  }
-  void setStaticLightModeColor(CRGB color) {
-    _static_light_mode_color = color;
-    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED, color.red);
-    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN, color.green);
-    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE, color.blue);
-  }
+  virtual void setAnimationsEnabled(bool enabled) = 0;
+  virtual void setStaticLightModeLightsOn(bool lights_on) = 0;
+  virtual void setStaticLightModeColor(CRGB color) = 0;
   void requestNextAnimation() { _nextAnimationRequested = true; }
   void setContinuousMode(bool enabled) { _continuousMode = enabled; }
 
@@ -94,7 +79,7 @@ protected:
     if (animation.clearOnStart()) {
       allBlack();
     }
-    while (_animationsEnabled && _static_light_mode_lights_on) {
+    while (animationsEnabled() && staticLightModeLightsOn()) {
       delayFrame();
       // FIXME: This should be overhauled, as this leads to code which changed
       //        something in frame(), only to determine that it has finished.
@@ -119,7 +104,7 @@ protected:
       }
       while (!(animationsEnabled() && _static_light_mode_lights_on)) {
         if (_static_light_mode_lights_on) {
-          fill_solid(leds, NUM_LEDS, CRGB(_static_light_mode_color.red, _static_light_mode_color.green, _static_light_mode_color.blue));
+          fill_solid(leds, NUM_LEDS, staticLightModeColor());
         } else {
           allBlack();
         }
@@ -145,17 +130,7 @@ protected:
   }
 private:
   bool _nextAnimationRequested;
-  bool _animationsEnabled;
   bool _continuousMode;
-
-  bool _static_light_mode_lights_on = false;
-
-  CRGB _static_light_mode_color = CRGB::White;
-
-  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON = "static_light_mode_lights_on";
-  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED = "static_light_mode_color_red";
-  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN = "static_light_mode_color_green";
-  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE = "static_light_mode_color_blue";
 
 #define X(field) \
   bool _enabled##field = true;

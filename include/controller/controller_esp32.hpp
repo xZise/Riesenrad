@@ -25,14 +25,38 @@ public:
   virtual bool innerLightOn() const override { return ledcRead(INNER_LIGHT_CHAN) > 0; }
   virtual uint8_t innerLightBrightness() const override { return _inner_light_brightness; }
   virtual bool animationsEnabled() const override { return NVS.getInt(NVS_KEY_ANIMATIONS, 0) > 0; }
+  virtual bool staticLightModeLightsOn() const override { return _static_light_mode_lights_on; }
+  virtual CRGB staticLightModeColor() const override { return _static_light_mode_color; }
+
+  virtual void setAnimationsEnabled(bool enabled) override {
+    _animationsEnabled = enabled;
+    NVS.setInt(NVS_KEY_ANIMATIONS, enabled ? 1 : 0);
+  }
+  virtual void setStaticLightModeLightsOn(bool lights_on) override {
+    _static_light_mode_lights_on = lights_on;
+    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON, lights_on ? 1 : 0);
+  }
+  virtual void setStaticLightModeColor(CRGB color) override {
+    _static_light_mode_color = color;
+    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED, color.red);
+    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN, color.green);
+    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE, color.blue);
+  }
 
   static constexpr uint8_t INNER_LIGHT_CHAN = 2;
 
   virtual void begin() override {
     Controller<DATA_PIN>::begin();
 
+    NVS.begin();
+
+    _static_light_mode_lights_on = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON, 0) > 0;
+    _static_light_mode_color.red = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED, 0);
+    _static_light_mode_color.green = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN, 0);
+    _static_light_mode_color.blue = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE, 0);
+
     bool wasEnabled = NVS.getInt(NVS_KEY_ANIMATIONS, 0) > 0;
-    Controller<DATA_PIN>::setAnimationsEnabled(wasEnabled);
+    setAnimationsEnabled(wasEnabled);
 
     _motorEnabled = NVS.getInt(NVS_KEY_MOTOR_ENABLED, 0) > 0;
     _max_speed = NVS.getInt(NVS_KEY_MOTOR_SPEED, Config::MAX_SPEED_UPPER_LIMIT);
@@ -74,11 +98,6 @@ public:
     if (_motorEnabled) {
       _target_speed = _max_speed;
     }
-  }
-
-  virtual void setAnimationsEnabled(bool enabled) override {
-    NVS.setInt(NVS_KEY_ANIMATIONS, enabled ? 1 : 0);
-    Controller<DATA_PIN>::setAnimationsEnabled(enabled);
   }
 
   virtual void run() override {
@@ -144,13 +163,20 @@ private:
   static constexpr const char* NVS_KEY_INNER_LIGHT_BRIGHTNESS = "inner_light_brightness";
   static constexpr const char* NVS_KEY_MOTOR_ENABLED = "motor_enabled";
   static constexpr const char* NVS_KEY_MOTOR_SPEED = "motor_max_speed";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON = "static_light_mode_lights_on";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED = "static_light_mode_color_red";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN = "static_light_mode_color_green";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE = "static_light_mode_color_blue";
   static constexpr uint8_t acceleration_per_step = (Config::MAX_SPEED_UPPER_LIMIT - Config::MIN_SPEED) / (2000 / Config::STEP_TIME);
 
   HAMqtt* _mqtt;
   bool _motorEnabled;
   uint8_t _max_speed = Config::MAX_SPEED_UPPER_LIMIT;
   uint8_t _target_speed = _max_speed;
+  bool _animationsEnabled;
   uint8_t _inner_light_brightness = 0;
+  bool _static_light_mode_lights_on = false;
+  CRGB _static_light_mode_color = CRGB::White;
 
   static void taskLoop(void* parameters) {
     static_cast<ESP32Controller<DATA_PIN>*>(parameters)->outsideLoop();
