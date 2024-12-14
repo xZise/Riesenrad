@@ -36,6 +36,7 @@ HALight animationsSwitch("animations", HALight::BrightnessFeature);
 HAButton nextAnimation("next");
 
 HASwitch motorSwitch("motor");
+HANumber motorSpeed("motor-speed", HANumber::PrecisionP0);
 
 #define X(field) \
   HASwitch enable##field##Switch("enable-" #field);
@@ -63,6 +64,14 @@ void onSwitchCommand(bool state, HASwitch* sender)
 {
   controller.setMotorEnabled(state);
   sender->setState(state);
+}
+
+void onMotorSpeedCommand(HANumeric value, HANumber* sender)
+{
+  uint8_t speed = value.toUInt8();
+  speed = constrain(speed, Ferriswheel::ESP32Controller<12>::min_speed, Ferriswheel::ESP32Controller<12>::max_speed);
+  controller.setMotorSpeed(speed);
+  sender->setState(speed);
 }
 
 void onAnimationStateCommand(bool state, HASwitch* sender)
@@ -144,6 +153,13 @@ void setup() {
 
   motorSwitch.onCommand(onSwitchCommand);
   motorSwitch.setName("Motor");
+
+  motorSpeed.onCommand(onMotorSpeedCommand);
+  motorSpeed.setName("Motor Speed");
+  motorSpeed.setMin(Ferriswheel::ESP32Controller<12>::min_speed);
+  motorSpeed.setMax(Ferriswheel::ESP32Controller<12>::max_speed);
+  motorSpeed.setStep(1);
+  motorSpeed.setIcon("mdi:speedometer");
 
 #define X(field) \
   enable##field##Switch.setName(field::NAME); \

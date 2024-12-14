@@ -12,7 +12,11 @@ namespace Ferriswheel
 template<uint8_t DATA_PIN>
 class ESP32Controller final : public Controller<DATA_PIN> {
 public:
+  static constexpr uint8_t max_speed = 0xe0;
+  static constexpr uint8_t min_speed = 0x60;
+
   void setMqtt(HAMqtt* mqtt) { _mqtt = mqtt; }
+  void setMotorSpeed(uint8_t speed) { _motorSpeed = speed; }
 
   virtual void setupTimer() override {
     xTaskCreatePinnedToCore(&taskLoop, "Animationloop", 2000, this, 1, nullptr, 1);
@@ -49,8 +53,6 @@ public:
     ledcWrite(STRING_CHAN, 0);
     ledcAttachPin(STRING_PIN, STRING_CHAN);
 
-    constexpr uint8_t max_speed = 0xe0;
-    constexpr uint8_t min_speed = 0x60;
     constexpr uint8_t speed_step = (max_speed - min_speed) / calculateSteps(2000);
     constexpr uint16_t running_steps = calculateSteps(60000);
     constexpr uint16_t stopped_steps = calculateSteps(10000);
@@ -76,10 +78,10 @@ public:
         updateSpeed = true;
         break;
       case MotorState::RampUp:
-        if (speed < max_speed - speed_step) {
+        if (speed < _motorSpeed - speed_step) {
           speed += speed_step;
         } else {
-          speed = max_speed;
+          speed = _motorSpeed;
           state = MotorState::Running;
           remainingSteps = running_steps;
         }
@@ -114,6 +116,7 @@ private:
   static constexpr const char* NVS_KEY_ANIMATIONS = "animations";
 
   HAMqtt* _mqtt;
+  uint8_t _motorSpeed = min_speed;
 
   enum class MotorState {
     Stopped,
