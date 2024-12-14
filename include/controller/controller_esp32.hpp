@@ -22,18 +22,18 @@ public:
 
   static constexpr uint8_t INNER_LIGHT_CHAN = 2;
 
-  virtual void begin() override {
-    NVS.begin();
+  virtual void begin() {
+    Controller<DATA_PIN>::begin();
 
-    bool wasEnabled = NVS.getInt(NVS_KEY_ANIMATIONS) > 0;
+    bool wasEnabled = NVS.getInt(NVS_KEY_ANIMATIONS, 0) > 0;
     Controller<DATA_PIN>::setAnimationsEnabled(wasEnabled);
 
-    _motorEnabled = NVS.getInt(NVS_KEY_MOTOR_ENABLED) > 0;
-    _max_speed = NVS.getInt(NVS_KEY_MOTOR_SPEED);
+    _motorEnabled = NVS.getInt(NVS_KEY_MOTOR_ENABLED, 0) > 0;
+    _max_speed = NVS.getInt(NVS_KEY_MOTOR_SPEED, Config::MAX_SPEED_UPPER_LIMIT);
 
     constexpr uint8_t INNER_LIGHT_PIN = 32;
     ledcSetup(INNER_LIGHT_CHAN, 20000, 8);
-    ledcWrite(INNER_LIGHT_CHAN, NVS.getInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS));
+    ledcWrite(INNER_LIGHT_CHAN, NVS.getInt(NVS_KEY_INNER_LIGHT_BRIGHTNESS, 0));
     ledcAttachPin(INNER_LIGHT_PIN, INNER_LIGHT_CHAN);
   }
 

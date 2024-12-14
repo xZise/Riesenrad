@@ -36,8 +36,21 @@ typedef void (*publish_animation_t)(const Animation* animation);
 template<uint8_t DATA_PIN>
 class Controller {
 public:
+  struct StaticLightColor {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+  };
+
   virtual void setupTimer() = 0;
-  virtual void begin() {}
+  virtual void begin() {
+    NVS.begin();
+
+    _static_light_mode_lights_on = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON, 0) > 0;
+    _static_light_mode_color.red = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED, 0);
+    _static_light_mode_color.green = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN, 0);
+    _static_light_mode_color.blue = NVS.getInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE, 0);
+  }
 
   virtual void run() = 0;
 
@@ -51,6 +64,16 @@ public:
   virtual void setMotorMaxSpeed(uint8_t speed) = 0;
   virtual void setInnerLightBrightness(uint8_t brightness) = 0;
   virtual void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
+  void setStaticLightModeLightsOn(bool lights_on) {
+    _static_light_mode_lights_on = lights_on;
+    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON, lights_on ? 1 : 0);
+  }
+  void setStaticLightModeColor(StaticLightColor color) {
+    _static_light_mode_color = color;
+    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED, color.red);
+    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN, color.green);
+    NVS.setInt(NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE, color.blue);
+  }
   void requestNextAnimation() { _nextAnimationRequested = true; }
   void setContinuousMode(bool enabled) { _continuousMode = enabled; }
 
@@ -92,7 +115,11 @@ protected:
     while (true) {
       if (!_animationsEnabled) {
         publishAnimation(nullptr);
-        allBlack();
+        // if (_static_light_mode_lights_on) {
+        //   fill_solid(leds, NUM_LEDS, CRGB(_static_light_mode_color.red, _static_light_mode_color.green, _static_light_mode_color.blue));
+        // } else {
+        //   allBlack();
+        // }
         FastLED.show();
         while (!_animationsEnabled) {
           delayFrame();
@@ -119,6 +146,15 @@ private:
   bool _nextAnimationRequested;
   bool _animationsEnabled;
   bool _continuousMode;
+
+  bool _static_light_mode_lights_on = false;
+
+  StaticLightColor _static_light_mode_color = { 255, 255, 255 };
+
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON = "static_light_mode_lights_on";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED = "static_light_mode_color_red";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN = "static_light_mode_color_green";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE = "static_light_mode_color_blue";
 
 #define X(field) \
   bool _enabled##field = true;

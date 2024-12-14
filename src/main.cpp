@@ -32,7 +32,8 @@ WiFiClient client;
 HADevice device;
 HAMqtt mqtt(client, device);
 
-HALight animationsSwitch("animations", HALight::BrightnessFeature);
+HASwitch animationsSwitch("animations");
+HALight light("light", HALight::RGBFeature);
 HALight innerLight("inner", HALight::BrightnessFeature);
 HAButton nextAnimation("next");
 
@@ -56,13 +57,15 @@ ISR(TIMER_VEC) {
 #endif
 
 #ifdef ARDUINO_ARCH_ESP32
-void onStateCommand(bool state, HALight* sender)
+void onAnimationsStateCommand(bool state, HASwitch* sender)
 {
-  if (sender == &animationsSwitch) {
-    controller.setAnimationsEnabled(state);
-  } else if (sender == &innerLight) {
-    controller.setInnerLightBrightness(state ? 100 : 0);
-  }
+  controller.setAnimationsEnabled(state);
+  sender->setState(state);
+}
+
+void onInnerLightStateCommand(bool state, HALight* sender)
+{
+  controller.setInnerLightBrightness(state ? 100 : 0);
   sender->setState(state);
 }
 
@@ -100,14 +103,25 @@ ENABLED_ANIMATIONS_LIST
   Serial.println("Unknown animation switch!");
 }
 
-void onBrightnessCommand(uint8_t brightness, HALight* sender) {
-  if (sender == &animationsSwitch) {
-    brightness = map(brightness, 0, 0xff, 0, Config::MAX_BRIGHTNESS);
-    FastLED.setBrightness(brightness);
-    brightness = map(brightness, 0, Config::MAX_BRIGHTNESS, 0, 0xff);
-  } else if (sender == &innerLight) {
-    controller.setInnerLightBrightness(brightness);
-  }
+void onLightStateCommand(bool state, HALight* sender) {
+  controller.setStaticLightModeLightsOn(state);
+  sender->setState(state);
+}
+
+void onLightBrightnessCommand(uint8_t brightness, HALight* sender) {
+  brightness = map(brightness, 0, 0xff, 0, Config::MAX_BRIGHTNESS);
+  FastLED.setBrightness(brightness);
+  brightness = map(brightness, 0, Config::MAX_BRIGHTNESS, 0, 0xff);
+  sender->setBrightness(brightness);
+}
+
+void onLightRGBColorCommand(HALight::RGBColor color, HALight* sender) {
+  controller.setStaticLightModeColor({ color.red, color.green, color.blue });
+  sender->setRGBColor(color);
+}
+
+void onInnerLightBrightnessCommand(uint8_t brightness, HALight* sender) {
+  controller.setInnerLightBrightness(brightness);
   sender->setBrightness(brightness);
 }
 
@@ -168,12 +182,16 @@ void setup() {
   device.setSoftwareVersion("1.2.0");
 
   // handle switch state
-  animationsSwitch.onStateCommand(onStateCommand);
-  animationsSwitch.onBrightnessCommand(onBrightnessCommand);
+  animationsSwitch.onCommand(onAnimationsStateCommand);
   animationsSwitch.setName("Animations");
 
-  innerLight.onStateCommand(onStateCommand);
-  innerLight.onBrightnessCommand(onBrightnessCommand);
+  light.onStateCommand(onLightStateCommand);
+  light.onBrightnessCommand(onLightBrightnessCommand);
+  light.onRGBColorCommand(onLightRGBColorCommand);
+  light.setName("Light");
+
+  innerLight.onStateCommand(onInnerLightStateCommand);
+  innerLight.onBrightnessCommand(onInnerLightBrightnessCommand);
   innerLight.setName("Inner Light");
 
   motorSwitch.onCommand(onMotorSwitchCommand);
