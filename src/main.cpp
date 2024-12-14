@@ -32,7 +32,8 @@ WiFiClient client;
 HADevice device;
 HAMqtt mqtt(client, device);
 
-HALight animationsSwitch("animations", HALight::BrightnessFeature);
+HALight lightSwitch("light", HALight::BrightnessFeature);
+HALight animationsSwitch("animations");
 HAButton nextAnimation("next");
 
 HASwitch motorSwitch("motor");
@@ -53,6 +54,17 @@ ISR(TIMER_VEC) {
 #endif
 
 #ifdef ARDUINO_ARCH_ESP32
+void onLightStateCommand(bool state, HALight* sender)
+{
+  FastLED.setBrightness(state ? 30 : 0);
+  sender->setState(state);
+}
+
+void onLightBrightnessCommand(uint8_t brightness, HALight* sender) {
+  FastLED.setBrightness(brightness);
+  sender->setBrightness(brightness);
+}
+
 void onStateCommand(bool state, HALight* sender)
 {
   controller.setAnimationsEnabled(state);
@@ -137,9 +149,15 @@ void setup() {
   device.setName("Ferriswheel");
   device.setSoftwareVersion("1.1.0");
 
-  // handle switch state
+  // handle light switch state
+  lightSwitch.onStateCommand(onLightStateCommand);
+  lightSwitch.onBrightnessCommand(onLightBrightnessCommand);
+  lightSwitch.setName("Light");
+  lightSwitch.setState(true);
+  lightSwitch.setBrightness(30);
+
+  // handle animations switch state
   animationsSwitch.onStateCommand(onStateCommand);
-  animationsSwitch.onBrightnessCommand(onBrightnessCommand);
   animationsSwitch.setName("Animations");
 
   motorSwitch.onCommand(onSwitchCommand);
