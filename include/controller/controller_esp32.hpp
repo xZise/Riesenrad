@@ -5,6 +5,7 @@
 
 #include <freertos/task.h>
 #include "controller/controller.hpp"
+#include "config.hpp"
 
 namespace Ferriswheel
 {
@@ -49,11 +50,9 @@ public:
     ledcWrite(STRING_CHAN, 0);
     ledcAttachPin(STRING_PIN, STRING_CHAN);
 
-    constexpr uint8_t max_speed = 0xe0;
-    constexpr uint8_t min_speed = 0x60;
-    constexpr uint8_t speed_step = (max_speed - min_speed) / calculateSteps(2000);
-    constexpr uint16_t running_steps = calculateSteps(60000);
-    constexpr uint16_t stopped_steps = calculateSteps(10000);
+    constexpr uint8_t speed_step = (Config::MAX_SPEED - Config::MIN_SPEED) / calculateSteps(Config::ACCELERATION_SECONDS * 1000);
+    constexpr uint16_t running_steps = calculateSteps(Config::STOP_EVERY_N_SECONDS * 1000);
+    constexpr uint16_t stopped_steps = calculateSteps(Config::STOP_FOR_N_SECONDS * 1000);
     uint8_t speed = 0;
     uint16_t remainingSteps = 0;
     MotorState state = MotorState::Stopped;
@@ -65,7 +64,7 @@ public:
       switch (state)
       {
       case MotorState::RampDown:
-        if (speed > min_speed + speed_step) {
+        if (speed > Config::MIN_SPEED + speed_step) {
           speed -= speed_step;
         } else {
           speed = 0;
@@ -76,10 +75,10 @@ public:
         updateSpeed = true;
         break;
       case MotorState::RampUp:
-        if (speed < max_speed - speed_step) {
+        if (speed < Config::MAX_SPEED - speed_step) {
           speed += speed_step;
         } else {
-          speed = max_speed;
+          speed = Config::MAX_SPEED;
           state = MotorState::Running;
           remainingSteps = running_steps;
         }
