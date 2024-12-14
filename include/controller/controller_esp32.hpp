@@ -44,11 +44,10 @@ public:
   void innerMotorLoop() {
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
-    constexpr uint8_t STRING_PIN = 14;
-    constexpr uint8_t STRING_CHAN = 1;
-    ledcSetup(STRING_CHAN, 20000, 8);
-    ledcWrite(STRING_CHAN, 0);
-    ledcAttachPin(STRING_PIN, STRING_CHAN);
+    constexpr uint8_t MOTOR_CHANNEL = 1;
+    ledcSetup(MOTOR_CHANNEL, 20000, 8);
+    ledcWrite(MOTOR_CHANNEL, 0);
+    ledcAttachPin(Config::MOTOR_PIN, MOTOR_CHANNEL);
 
     constexpr uint8_t speed_step = (Config::MAX_SPEED - Config::MIN_SPEED) / calculateSteps(Config::ACCELERATION_SECONDS * 1000);
     constexpr uint16_t running_steps = calculateSteps(Config::STOP_EVERY_N_SECONDS * 1000);
@@ -88,7 +87,7 @@ public:
       }
       if (updateSpeed) {
         Serial.printf("New speed 0x%02x\n", speed);
-        ledcWrite(STRING_CHAN, speed);
+        ledcWrite(MOTOR_CHANNEL, speed);
       } else {
         if (remainingSteps == 0) {
           if (this->motorEnabled()) {
