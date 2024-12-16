@@ -123,10 +123,10 @@ private:
   static constexpr const char* NVS_KEY_INNER_LIGHT_BRIGHTNESS = "inner_light_brightness";
   static constexpr const char* NVS_KEY_MOTOR_ENABLED = "motor_enabled";
   static constexpr const char* NVS_KEY_MOTOR_SPEED = "motor_max_speed";
-  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON = "static_light_mode_lights_on";
-  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED = "static_light_mode_color_red";
-  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN = "static_light_mode_color_green";
-  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE = "static_light_mode_color_blue";
+  static constexpr const char* NVS_KEY_LIGHT_ON = "lights_on";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED = "static_light_red";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN = "static_light_green";
+  static constexpr const char* NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE = "static_light_blue";
   static constexpr const char* NVS_KEY_CONTINUOUS_MODE = "continuous_mode";
   static constexpr const char* NVS_KEY_INNER_LIGHT_ON = "inner_light_on";
   static constexpr uint8_t acceleration_per_step = (Config::MAX_SPEED_UPPER_LIMIT - Config::MIN_SPEED) / (2000 / Config::STEP_TIME);
@@ -139,7 +139,7 @@ private:
       case Controller<DATA_PIN>::Setting::INNER_LIGHT_BRIGHTNESS: return NVS_KEY_INNER_LIGHT_BRIGHTNESS;
       case Controller<DATA_PIN>::Setting::MOTOR_ENABLED: return NVS_KEY_MOTOR_ENABLED;
       case Controller<DATA_PIN>::Setting::MOTOR_MAX_SPEED: return NVS_KEY_MOTOR_SPEED;
-      case Controller<DATA_PIN>::Setting::LIGHT_ON: return NVS_KEY_STATIC_LIGHT_MODE_LIGHTS_ON;
+      case Controller<DATA_PIN>::Setting::LIGHT_ON: return NVS_KEY_LIGHT_ON;
       case Controller<DATA_PIN>::Setting::STATIC_LIGHT_MODE_COLOR_RED: return NVS_KEY_STATIC_LIGHT_MODE_COLOR_RED;
       case Controller<DATA_PIN>::Setting::STATIC_LIGHT_MODE_COLOR_GREEN: return NVS_KEY_STATIC_LIGHT_MODE_COLOR_GREEN;
       case Controller<DATA_PIN>::Setting::STATIC_LIGHT_MODE_COLOR_BLUE: return NVS_KEY_STATIC_LIGHT_MODE_COLOR_BLUE;
