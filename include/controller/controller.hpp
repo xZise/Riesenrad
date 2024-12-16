@@ -57,20 +57,22 @@ public:
 
   virtual bool isMagnetDetected() = 0;
 
+  virtual void initiateMotorStopForPassengers(float current_speed_mm_per_sec, float stop_in_miliseconds) = 0;
+
   void run() {
     while (true) {
       run_loop();
 
-      if (isMagnetDetected() && !_magnet_detected && (_last_magnet_detection_timestamp == 0 || millis() - _last_magnet_detection_timestamp > 200)) {
-        const unsigned long time_diff = millis() - _last_magnet_detection_timestamp;
-        const float speed = (time_diff > 0) ? (Config::WHEEL_DIAMETER_MM * M_PI / Config::WHEEL_NUMBER_OF_CABINS / (time_diff / 1000.0)) : 0;
-        Serial.printf("Wheel speed: %.2f mm/sec\n", speed);
+      if (isMagnetDetected() && !_magnet_detected && (_last_magnet_detection_timestamp == 0 || millis() - _last_magnet_detection_timestamp > Config::MAG_SENSOR_DEBOUNCE_TIME_MS)) {
+        const unsigned long time_diff_ms = millis() - _last_magnet_detection_timestamp;
+        const float speed_mm_per_sec = (time_diff_ms > 0) ? (Config::WHEEL_DIAMETER_MM * M_PI / Config::WHEEL_NUMBER_OF_CABINS / (time_diff_ms / 1000.0)) : 0;
+        Serial.printf("Wheel speed: %.2f mm/sec\n", speed_mm_per_sec);
 
         _last_magnet_detection_timestamp = millis();
 
         if (!continuousMode() && ++_passed_cabins >= Config::STOP_EVERY_N_CABINS) {
-          Serial.println("Stopping for passengers");
-          _motor_should_stop_for_passengers = true;
+          const float distance_between_two_cabins_mm = Config::WHEEL_DIAMETER_MM * M_PI / Config::WHEEL_NUMBER_OF_CABINS;
+          initiateMotorStopForPassengers(speed_mm_per_sec, distance_between_two_cabins_mm / speed_mm_per_sec * 1000);
           _passed_cabins = 0;
         }
       }
@@ -108,7 +110,6 @@ public:
   CRGB staticLightModeColor() const { return _static_light_mode_color; }
   bool nextAnimationRequested() const { return _next_animation_requested; }
   bool continuousMode() const { return _continuous_mode; }
-  bool motorShouldStopForPassengers() const { return _motor_should_stop_for_passengers; }
 
   void setInnerLightOn(bool on) {
     _inner_light_on = on;
@@ -229,7 +230,6 @@ private:
   CRGB _static_light_mode_color = CRGB::White;
   bool _inner_light_on = false;
   uint8_t _inner_light_brightness = 0;
-  bool _motor_should_stop_for_passengers = false;
   unsigned long _last_magnet_detection_timestamp = 0;
   bool _magnet_detected = false;
   uint8_t _passed_cabins = 0;

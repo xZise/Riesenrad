@@ -67,15 +67,26 @@ public:
     taskYIELD();
   }
 
+  float get_speed_at_time(float start_speed_mm_per_sec, float target_deceleration_time_ms, float passed_time_ms) {
+    return start_speed_mm_per_sec - (start_speed_mm_per_sec / target_deceleration_time_ms) * passed_time_ms;
+  }
+
+  virtual void initiateMotorStopForPassengers(float current_speed_mm_per_sec, float target_deceleration_time_ms) override {
+    Serial.printf("Initiating motor stop for passengers in %.0f ms (current speed: %.2f mm/sec)\n", target_deceleration_time_ms, current_speed_mm_per_sec);
+
+    _motor_speed_to_mm_per_sec_factor = current_speed_mm_per_sec / _current_speed;
+    _motor_stop_for_passengers_start_time = millis();
+    _motor_stop_for_passengers_start_speed = current_speed_mm_per_sec;
+    _motor_stop_for_passengers_target_deceleration_time_ms = target_deceleration_time_ms;
+  }
+
   void innerMotorLoop() {
     constexpr uint8_t MOTOR_CHANNEL = 1;
     ledcSetup(MOTOR_CHANNEL, 20000, 8);
     ledcWrite(MOTOR_CHANNEL, 0);
     ledcAttachPin(Config::MOTOR_PIN, MOTOR_CHANNEL);
 
-    constexpr uint32_t stop_every_steps = (Config::STOP_EVERY_N_SECONDS * 1000) / Config::STEP_TIME;
     constexpr uint32_t stop_for_steps = (Config::STOP_FOR_N_SECONDS * 1000) / Config::STEP_TIME;
-    uint8_t current_speed = 0;
     uint32_t steps_counter = 0;
     uint8_t target_speed = this->motorEnabled() ? this->motorMaxSpeed() : 0;
 
@@ -88,15 +99,8 @@ public:
             target_speed = this->motorMaxSpeed();
           }
         } else {
-          if (this->motorShouldStopForPassengers()) {
-            target_speed = 0;
-            steps_counter = 0;
-          }
-
-          if (current_speed == 0 && target_speed == 0) {
-            ++steps_counter;
-
-            if (steps_counter >= stop_for_steps) {
+          if (_current_speed == 0 && target_speed == 0) {
+            if (++steps_counter >= stop_for_steps) {
               target_speed = this->motorMaxSpeed();
               steps_counter = 0;
             }
@@ -110,13 +114,18 @@ public:
         target_speed = this->motorMaxSpeed();
       }
 
-      if (current_speed < target_speed) {
-        current_speed = std::min<int16_t>(static_cast<int16_t>(current_speed) + acceleration_per_step, target_speed);
-      } else if (current_speed > target_speed) {
-        current_speed = std::max<int16_t>(static_cast<int16_t>(current_speed) - acceleration_per_step, target_speed);
+      if (_motor_stop_for_passengers_start_time > 0 && !this->continuousMode()) {
+        const unsigned long time_passed = millis() - _motor_stop_for_passengers_start_time;
+        _current_speed = get_speed_at_time(_motor_stop_for_passengers_start_speed, _motor_stop_for_passengers_target_deceleration_time_ms, time_passed);
+      } else if (_current_speed < target_speed) {
+        _current_speed = std::min<int16_t>(static_cast<int16_t>(_current_speed) + acceleration_per_step, target_speed);
+      } else if (_current_speed > target_speed) {
+        _current_speed = std::max<int16_t>(static_cast<int16_t>(_current_speed) - acceleration_per_step, target_speed);
       }
 
-      ledcWrite(MOTOR_CHANNEL, current_speed);
+      Serial.printf("Current speed: %.2f mm/sec, target speed: %.2f mm/sec\n", _current_speed, target_speed);
+
+      ledcWrite(MOTOR_CHANNEL, _current_speed);
     }
   }
 protected:
@@ -135,7 +144,11 @@ private:
   static constexpr const char* NVS_KEY_CONTINUOUS_MODE = "continuous_mode";
   static constexpr const char* NVS_KEY_INNER_LIGHT_ON = "inner_light_on";
   static constexpr uint8_t acceleration_per_step = (Config::MAX_SPEED_UPPER_LIMIT - Config::MIN_SPEED) / (2000 / Config::STEP_TIME);
-
+  float _motor_speed_to_mm_per_sec_factor = 0;
+  unsigned long _motor_stop_for_passengers_start_time = 0;
+  float _motor_stop_for_passengers_start_speed = 0;
+  float _motor_stop_for_passengers_target_deceleration_time_ms = 0;
+  uint8_t _current_speed = 0;
   HAMqtt* _mqtt;
 
   static const char* settingToString(typename Controller<DATA_PIN>::Setting setting) {

@@ -14,9 +14,10 @@ static constexpr uint8_t ACCELERATION_SECONDS = 2;
 static constexpr uint32_t STEP_TIME = 100;
 static constexpr uint8_t STOP_FOR_N_SECONDS = 10;
 
-static constexpr float WHEEL_DIAMETER_MM = 260;
+static constexpr float WHEEL_DIAMETER_MM = 590;
 static constexpr float WHEEL_NUMBER_OF_CABINS = 9;
 static constexpr uint8_t STOP_EVERY_N_CABINS = 8;
+static constexpr uint16_t MAG_SENSOR_DEBOUNCE_TIME_MS = 1000;
 
 #ifdef ESP32
 static constexpr uint8_t MOTOR_PIN = 13;
