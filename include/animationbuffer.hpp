@@ -28,4 +28,4 @@ private:
   bool _created { false };
 };
 
-AnimationBuffer animationBuffer;
+AnimationBuffer animation_buffer;

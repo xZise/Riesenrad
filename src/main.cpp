@@ -103,7 +103,7 @@ ENABLED_ANIMATIONS_LIST
 }
 
 void onLightStateCommand(bool state, HALight* sender) {
-  controller.setStaticLightModeLightsOn(state);
+  controller.setLightOn(state);
   sender->setState(state);
 }
 
@@ -229,7 +229,7 @@ ENABLED_ANIMATIONS_LIST
   mqtt.loop();
 
   animationsSwitch.setState(controller.animationsEnabled());
-  light.setState(controller.staticLightModeLightsOn());
+  light.setState(controller.lightOn());
   light.setBrightness(FastLED.getBrightness());
   light.setRGBColor({ controller.staticLightModeColor().red, controller.staticLightModeColor().green, controller.staticLightModeColor().blue });
   innerLight.setState(controller.innerLightOn());
