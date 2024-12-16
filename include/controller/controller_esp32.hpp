@@ -25,13 +25,23 @@ public:
   virtual void begin() override {
     NVS.begin();
 
-    bool wasEnabled = NVS.getInt(NVS_KEY_ANIMATIONS) > 0;
-    Controller<DATA_PIN>::setAnimationsEnabled(wasEnabled);
+    Controller<DATA_PIN>::begin();
   }
 
-  virtual void setAnimationsEnabled(bool enabled) override {
-    NVS.setInt(NVS_KEY_ANIMATIONS, enabled ? 1 : 0);
-    Controller<DATA_PIN>::setAnimationsEnabled(enabled);
+  virtual void saveSettingInt(typename Controller<DATA_PIN>::Setting setting, uint8_t value) override {
+    NVS.setInt(settingToString(setting), value);
+  }
+
+  virtual void saveSettingBool(typename Controller<DATA_PIN>::Setting setting, bool value) override {
+    NVS.setInt(settingToString(setting), value ? (uint8_t)1 : (uint8_t)0);
+  }
+
+  virtual uint8_t loadSettingInt(typename Controller<DATA_PIN>::Setting setting) override {
+    return NVS.getInt(settingToString(setting));
+  }
+
+  virtual bool loadSettingBool(typename Controller<DATA_PIN>::Setting setting) override {
+    return NVS.getInt(settingToString(setting)) > 0;
   }
 
   virtual void run() override {
@@ -118,6 +128,8 @@ private:
   HAMqtt* _mqtt;
 
 #ifdef MOTOR_AVAILABLE
+  static constexpr const char* NVS_KEY_MOTOR_ENABLED = "motor_enabled";
+
   enum class MotorState {
     Stopped,
     RampUp,
@@ -134,6 +146,18 @@ private:
     static_cast<ESP32Controller<DATA_PIN>*>(parameters)->innerMotorLoop();
   }
 #endif // MOTOR_AVAILABLE
+
+  static const char* settingToString(typename Controller<DATA_PIN>::Setting setting) {
+    switch (setting) {
+      case Controller<DATA_PIN>::Setting::ANIMATIONS_ENABLED: return NVS_KEY_ANIMATIONS;
+#ifdef MOTOR_AVAILABLE
+      case Controller<DATA_PIN>::Setting::MOTOR_ENABLED: return NVS_KEY_MOTOR_ENABLED;
+#endif // MOTOR_AVAILABLE
+      default:
+        Serial.printf("Unknown setting %d\n", setting);
+        return nullptr;
+    }
+  }
 
   static void taskLoop(void* parameters) {
     static_cast<ESP32Controller<DATA_PIN>*>(parameters)->outsideLoop();

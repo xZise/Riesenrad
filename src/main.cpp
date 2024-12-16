@@ -178,6 +178,10 @@ ENABLED_ANIMATIONS_LIST
   mqtt.loop();
 
   animationsSwitch.setState(controller.animationsEnabled());
+  animationsSwitch.setBrightness(FastLED.getBrightness());
+#ifdef MOTOR_AVAILABLE
+  motorSwitch.setState(controller.motorEnabled());
+#endif // MOTOR_AVAILABLE
 
 #define X(field)                                                   \
   enable##field##Switch.setState(controller.is##field##Enabled()); \
