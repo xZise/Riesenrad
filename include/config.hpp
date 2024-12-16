@@ -5,6 +5,8 @@
 namespace Config
 {
 
+static constexpr uint8_t MAX_BRIGHTNESS = 0x30;
+
 static constexpr uint8_t MIN_SPEED = 0x60;
 static constexpr uint8_t MAX_SPEED = 0xe0;
 static constexpr uint8_t ACCELERATION_SECONDS = 2;

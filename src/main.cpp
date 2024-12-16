@@ -80,8 +80,10 @@ ENABLED_ANIMATIONS_LIST
 }
 
 void onBrightnessCommand(uint8_t brightness, HALight* sender) {
+  brightness = map(brightness, 0, 0xff, 0, Config::MAX_BRIGHTNESS);
   FastLED.setBrightness(brightness);
-  sender->setBrightness(brightness); // report brightness back to the Home Assistant
+  brightness = map(brightness, 0, Config::MAX_BRIGHTNESS, 0, 0xff);
+  sender->setBrightness(brightness);
 }
 
 void onButtonCommand(HAButton* button) {
