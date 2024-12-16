@@ -27,10 +27,16 @@ public:
 
     Controller<DATA_PIN>::begin();
 
+    pinMode(Config::MAG_SENSOR_PIN, INPUT_PULLUP);
+
     constexpr uint8_t INNER_LIGHT_PIN = 32;
     ledcSetup(INNER_LIGHT_CHAN, 20000, 8);
     ledcWrite(INNER_LIGHT_CHAN, this->innerLightBrightness());
     ledcAttachPin(INNER_LIGHT_PIN, INNER_LIGHT_CHAN);
+  }
+
+  virtual bool isMagnetDetected() override {
+    return digitalRead(Config::MAG_SENSOR_PIN) == LOW;
   }
 
   virtual void saveSettingInt(typename Controller<DATA_PIN>::Setting setting, int value) override {
@@ -49,18 +55,16 @@ public:
     return NVS.getInt(settingToString(setting)) > 0;
   }
 
-  virtual void run() override {
-    while (true) {
-      if (_mqtt) {
-        _mqtt->loop();
-      }
-      if (this->innerLightOn()) {
-        ledcWrite(INNER_LIGHT_CHAN, this->innerLightBrightness());
-      } else {
-        ledcWrite(INNER_LIGHT_CHAN, 0);
-      }
-      taskYIELD();
+  virtual void run_loop() override {
+    if (_mqtt) {
+      _mqtt->loop();
     }
+    if (this->innerLightOn()) {
+      ledcWrite(INNER_LIGHT_CHAN, this->innerLightBrightness());
+    } else {
+      ledcWrite(INNER_LIGHT_CHAN, 0);
+    }
+    taskYIELD();
   }
 
   void innerMotorLoop() {
@@ -84,13 +88,14 @@ public:
             target_speed = this->motorMaxSpeed();
           }
         } else {
-          ++steps_counter;
-          if (target_speed == this->motorMaxSpeed()) {
-            if (steps_counter >= stop_every_steps) {
-              target_speed = 0;
-              steps_counter = 0;
-            }
-          } else {
+          if (this->motorShouldStopForPassengers()) {
+            target_speed = 0;
+            steps_counter = 0;
+          }
+
+          if (current_speed == 0 && target_speed == 0) {
+            ++steps_counter;
+
             if (steps_counter >= stop_for_steps) {
               target_speed = this->motorMaxSpeed();
               steps_counter = 0;
