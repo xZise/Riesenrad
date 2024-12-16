@@ -6,6 +6,7 @@ namespace Config
 {
 
 static constexpr uint8_t MAX_BRIGHTNESS = 0x30;
+static constexpr bool USE_EXTENDED_UNIQUE_IDS = true;
 
 static constexpr uint8_t MIN_SPEED = 0x60;
 static constexpr uint8_t MAX_SPEED = 0xe0;

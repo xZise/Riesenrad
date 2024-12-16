@@ -122,12 +122,15 @@ void setup() {
   device.setUniqueId(mac, sizeof(mac));
   device.enableSharedAvailability();
   device.enableLastWill();
+  if (Config::USE_EXTENDED_UNIQUE_IDS) {
+    device.enableExtendedUniqueIds();
+  }
 
   // connect to wifi
-  WiFi.setHostname("Ferriswheel");
+  WiFi.setHostname(Config::NAME);
   Serial.println("Start connection");
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  WiFi.begin(Config::Secrets::WIFI_SSID, Config::Secrets::WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
       Serial.print('.');
       delay(500); // waiting for the connection
@@ -136,8 +139,8 @@ void setup() {
   Serial.println("Connected to the network");
 
   // set device's details (optional)
-  device.setName("Ferriswheel");
-  device.setSoftwareVersion("1.1.0");
+  device.setName(Config::NAME);
+  device.setSoftwareVersion("1.2.0");
 
   // handle switch state
   animationsSwitch.onStateCommand(onStateCommand);
@@ -161,7 +164,7 @@ ENABLED_ANIMATIONS_LIST
   currentAnimation.setName("Current");
   currentAnimation.setIcon("mdi:animation");
 
-  mqtt.begin(BROKER_ADDR, MQTT_USER, MQTT_PASSWORD);
+  mqtt.begin(Config::Secrets::BROKER_ADDR, Config::Secrets::MQTT_USER, Config::Secrets::MQTT_PASSWORD);
 
   controller.setMqtt(&mqtt);
 
