@@ -7,6 +7,8 @@
 #include <Arduino.h>
 #include "leds.hpp"
 
+#include "config.hpp"
+
 #include "animation.hpp"
 #include "alternating.hpp"
 #include "snake.hpp"
@@ -45,11 +47,14 @@ public:
 
   const bool animationsEnabled() const { return _animationsEnabled; }
   const bool nextAnimationRequested() const { return _nextAnimationRequested; }
-  const bool motorEnabled() const { return _motorEnabled; }
 
   virtual void setAnimationsEnabled(bool enabled) { _animationsEnabled = enabled; }
   void requestNextAnimation() { _nextAnimationRequested = true; }
+
+#ifdef MOTOR_AVAILABLE
+  const bool motorEnabled() const { return _motorEnabled; }
   void setMotorEnabled(bool enabled) { _motorEnabled = enabled; }
+#endif // MOTOR_AVAILABLE
 
   void onPublishAnimation(publish_animation_t handler) { _publishAnimation = handler; }
 
@@ -115,7 +120,9 @@ protected:
 private:
   bool _nextAnimationRequested;
   bool _animationsEnabled;
+#ifdef MOTOR_AVAILABLE
   bool _motorEnabled;
+#endif // MOTOR_AVAILABLE
 
 #define X(field) \
   bool _enabled##field = true;

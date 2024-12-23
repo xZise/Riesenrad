@@ -17,7 +17,9 @@ public:
 
   virtual void setupTimer() override {
     xTaskCreatePinnedToCore(&taskLoop, "Animationloop", 2000, this, 1, nullptr, 1);
+#ifdef MOTOR_AVAILABLE
     xTaskCreatePinnedToCore(&motorLoop, "Motorloop", 2000, this, 1, nullptr, 1);
+#endif // MOTOR_AVAILABLE
   }
 
   virtual void begin() override {
@@ -41,6 +43,7 @@ public:
     }
   }
 
+#ifdef MOTOR_AVAILABLE
   void innerMotorLoop() {
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
@@ -104,6 +107,7 @@ public:
       vTaskDelay(step_time / portTICK_PERIOD_MS);
     }
   }
+#endif // MOTOR_AVAILABLE
 protected:
   virtual void delayFrame() override {
     vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -113,6 +117,7 @@ private:
 
   HAMqtt* _mqtt;
 
+#ifdef MOTOR_AVAILABLE
   enum class MotorState {
     Stopped,
     RampUp,
@@ -125,12 +130,13 @@ private:
     return milliseconds / step_time;
   }
 
-  static void taskLoop(void* parameters) {
-    static_cast<ESP32Controller<DATA_PIN>*>(parameters)->outsideLoop();
-  }
-
   static void motorLoop(void* parameters) {
     static_cast<ESP32Controller<DATA_PIN>*>(parameters)->innerMotorLoop();
+  }
+#endif // MOTOR_AVAILABLE
+
+  static void taskLoop(void* parameters) {
+    static_cast<ESP32Controller<DATA_PIN>*>(parameters)->outsideLoop();
   }
 };
 

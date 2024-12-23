@@ -35,7 +35,9 @@ HAMqtt mqtt(client, device);
 HALight animationsSwitch("animations", HALight::BrightnessFeature);
 HAButton nextAnimation("next");
 
+#ifdef MOTOR_AVAILABLE
 HASwitch motorSwitch("motor");
+#endif // MOTOR_AVAILABLE
 
 #define X(field) \
   HASwitch enable##field##Switch("enable-" #field);
@@ -59,11 +61,13 @@ void onStateCommand(bool state, HALight* sender)
   sender->setState(state);
 }
 
+#ifdef MOTOR_AVAILABLE
 void onSwitchCommand(bool state, HASwitch* sender)
 {
   controller.setMotorEnabled(state);
   sender->setState(state);
 }
+#endif // MOTOR_AVAILABLE
 
 void onAnimationStateCommand(bool state, HASwitch* sender)
 {
@@ -147,8 +151,10 @@ void setup() {
   animationsSwitch.onBrightnessCommand(onBrightnessCommand);
   animationsSwitch.setName("Animations");
 
+#ifdef MOTOR_AVAILABLE
   motorSwitch.onCommand(onSwitchCommand);
   motorSwitch.setName("Motor");
+#endif // MOTOR_AVAILABLE
 
 #define X(field) \
   enable##field##Switch.setName(field::NAME); \
@@ -180,7 +186,9 @@ ENABLED_ANIMATIONS_LIST
 
   publishAnimation(nullptr);
   #else
+#ifdef MOTOR_AVAILABLE
   controller.setMotorEnabled(true);
+#endif // MOTOR_AVAILABLE
   controller.setAnimationsEnabled(true);
   #endif
 
