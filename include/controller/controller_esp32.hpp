@@ -29,19 +29,19 @@ public:
   }
 
   virtual void saveSettingInt(typename Controller<DATA_PIN>::Setting setting, uint8_t value) override {
-    NVS.setInt(settingToString(setting), value);
+    settingToString(setting).setInt(value);
   }
 
   virtual void saveSettingBool(typename Controller<DATA_PIN>::Setting setting, bool value) override {
-    NVS.setInt(settingToString(setting), value ? (uint8_t)1 : (uint8_t)0);
+    settingToString(setting).setInt(value ? (uint8_t)1 : (uint8_t)0);
   }
 
   virtual uint8_t loadSettingInt(typename Controller<DATA_PIN>::Setting setting) override {
-    return NVS.getInt(settingToString(setting));
+    return settingToString(setting).getInt();
   }
 
   virtual bool loadSettingBool(typename Controller<DATA_PIN>::Setting setting) override {
-    return NVS.getInt(settingToString(setting)) > 0;
+    return settingToString(setting).getInt() > 0;
   }
 
   virtual void run() override {
@@ -123,12 +123,38 @@ protected:
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 private:
-  static constexpr const char* NVS_KEY_ANIMATIONS = "animations";
+  class SettingName {
+  public:
+    template<size_t len>
+    constexpr SettingName(const char (&key)[len]) : _name(key) {
+      static_assert(len <= 16);
+    }
+
+    constexpr SettingName() : _name(nullptr) {}
+
+    uint8_t getInt() const {
+      if (!_name) {
+        return 0;
+      }
+      return NVS.getInt(_name);
+    }
+
+    void setInt(uint8_t value) const {
+      if (_name) {
+        NVS.setInt(_name, value);
+      }
+    }
+  private:
+    const char* _name;
+  };
+
+  static constexpr SettingName INVALID = SettingName();
+  static constexpr SettingName NVS_KEY_ANIMATIONS = SettingName("animations");
 
   HAMqtt* _mqtt;
 
 #ifdef MOTOR_AVAILABLE
-  static constexpr const char* NVS_KEY_MOTOR_ENABLED = "motor_enabled";
+  static constexpr SettingName NVS_KEY_MOTOR_ENABLED = SettingName("motor_enabled");
 
   enum class MotorState {
     Stopped,
@@ -147,7 +173,7 @@ private:
   }
 #endif // MOTOR_AVAILABLE
 
-  static const char* settingToString(typename Controller<DATA_PIN>::Setting setting) {
+  static const SettingName settingToString(typename Controller<DATA_PIN>::Setting setting) {
     switch (setting) {
       case Controller<DATA_PIN>::Setting::ANIMATIONS_ENABLED: return NVS_KEY_ANIMATIONS;
 #ifdef MOTOR_AVAILABLE
@@ -155,7 +181,7 @@ private:
 #endif // MOTOR_AVAILABLE
       default:
         Serial.printf("Unknown setting %d\n", setting);
-        return nullptr;
+        return INVALID;
     }
   }
 
@@ -165,4 +191,3 @@ private:
 };
 
 };
-
