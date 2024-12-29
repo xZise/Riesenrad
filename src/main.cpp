@@ -173,6 +173,7 @@ ENABLED_ANIMATIONS_LIST
   mqtt.begin(Config::Secrets::BROKER_ADDR, Config::Secrets::MQTT_USER, Config::Secrets::MQTT_PASSWORD);
 
   controller.setMqtt(&mqtt);
+  controller.onPublishAnimation(publishAnimation);
 
   mqtt.loop();
 
