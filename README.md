@@ -10,3 +10,9 @@ When using an ESP32, the `secrets.hpp.example` needs to be renamed/copied to
 For the GitHub workflow the `secrets.hpp.tests` is copied to `secrets.hpp`. As
 such, when modifying the `secrets.hpp.example`, the corresponding
 `secrets.hpp.tests` might be updated as well.
+
+Branches
+--------
+
+The two primary branches `main` and `dev` won't be rebased usually and `dev` is
+just "further" along.
